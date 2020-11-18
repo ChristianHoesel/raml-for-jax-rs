@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,11 @@
 package org.raml.jaxrs.converter.model;
 
 import com.google.common.base.Optional;
-
-import org.raml.jaxrs.model.JaxRsQueryParameter;
+import org.raml.api.RamlEntity;
 import org.raml.api.RamlQueryParameter;
+import org.raml.jaxrs.model.JaxRsQueryParameter;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -50,8 +49,8 @@ class JaxRsRamlQueryParameter implements RamlQueryParameter {
   }
 
   @Override
-  public Type getType() {
-    return this.queryParameter.getType();
+  public RamlEntity getEntity() {
+    return JaxRsRamlEntity.create(this.queryParameter.getEntity().get());
   }
 
   @Override

@@ -1,5 +1,3 @@
-![](http://raml.org/images/logo.png)
-
 # RAML for JAX-RS
 
 ## Introduction
@@ -18,7 +16,11 @@ Maven artifacts are available at:
  - https://repository-master.mulesoft.org/releases/ - releases repository
  - https://repository-master.mulesoft.org/snapshots/ - snaphots repository
 
-## Contributing
-If you are interested in contributing some code to this project, thanks! Please submit a [Contributors Agreement](https://api-notebook.anypoint.mulesoft.com/notebooks#bc1cf75a0284268407e4) acknowledging that you are transferring ownership.
+Releases are also available on Maven Central.
 
-To discuss this project, please use its github issues or the [RAML forum](http://forums.raml.org/).
+## Contributing
+If you are interested in contributing some code to this project, thanks! Please submit a [Contributors Agreement](https://api-notebook.anypoint.mulesoft.com/notebooks#380297ed0e474010ff43) acknowledging that you are transferring ownership.
+
+To discuss this project:
+- bug/feature request: please file a github issue
+- If you're not sure: you can use the [RAML forum](http://forums.raml.org/) or [Slack](https://raml.org/slack)

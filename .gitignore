@@ -10,6 +10,11 @@ nogit/
 /.project
 .metadata
 RemoteSystemsTempFiles
-/.gradle
+.gradle
 .DS_Store
-pom.xml.versionsBackup
+.classpath
+.settings
+.project
+bin
+build
+*.xml.versionsBackup

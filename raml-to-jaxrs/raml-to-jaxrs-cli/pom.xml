@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.raml</groupId>
+        <groupId>org.raml.jaxrs</groupId>
         <artifactId>raml-to-jaxrs</artifactId>
-        <version>2.0.1-SNAPSHOT</version>
+        <version>3.0.6-SNAPSHOT</version>
     </parent>
     <artifactId>raml-to-jaxrs-cli</artifactId>
 
@@ -15,12 +15,11 @@
         <dependency>
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
-            <version>1.3.1</version>
         </dependency>
         <dependency>
-            <groupId>org.raml</groupId>
+            <groupId>org.raml.jaxrs</groupId>
             <artifactId>jaxrs-code-generator</artifactId>
-            <version>2.0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

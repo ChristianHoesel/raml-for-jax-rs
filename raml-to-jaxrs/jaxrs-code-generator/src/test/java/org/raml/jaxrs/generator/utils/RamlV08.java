@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.raml.jaxrs.generator.builders.resources.ResourceBuilder;
 import org.raml.jaxrs.generator.v08.V08Finder;
 import org.raml.jaxrs.generator.v08.V08GResource;
 import org.raml.jaxrs.generator.v08.V08TypeRegistry;
+import org.raml.jaxrs.generator.v10.ExtensionManager;
 import org.raml.v2.api.RamlModelBuilder;
 import org.raml.v2.api.RamlModelResult;
 import org.raml.v2.api.model.common.ValidationResult;
@@ -63,11 +64,11 @@ public class RamlV08 {
     Api api = buildApiV08(test, raml);
     V08TypeRegistry registry = new V08TypeRegistry();
     V08Finder typeFinder = new V08Finder(api, new GAbstractionFactory(), registry);
-    CurrentBuild currentBuild = new CurrentBuild(typeFinder, null);
-    currentBuild.constructClasses();
+    CurrentBuild currentBuild = new CurrentBuild(null, ExtensionManager.createExtensionManager(), null);
+    currentBuild.constructClasses(typeFinder);
     ResourceBuilder builder =
         new ResourceBuilder(currentBuild, new V08GResource(new GAbstractionFactory(), api
-            .resources().get(0), typeFinder.globalSchemas(), registry), name, uri);
+            .resources().get(0), typeFinder.globalSchemas().keySet(), registry), name, uri);
     builder.output(container);
   }
 }

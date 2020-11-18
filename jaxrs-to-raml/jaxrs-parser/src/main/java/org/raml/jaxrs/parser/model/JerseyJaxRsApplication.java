@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,21 +18,14 @@ package org.raml.jaxrs.parser.model;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.raml.jaxrs.model.JaxRsApplication;
 import org.raml.jaxrs.model.JaxRsResource;
 import org.raml.jaxrs.model.JaxRsSupportedAnnotation;
 import org.raml.jaxrs.parser.source.SourceParser;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import javax.annotation.Nullable;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -40,23 +33,26 @@ public class JerseyJaxRsApplication implements JaxRsApplication {
 
   private final Set<JaxRsResource> resources;
   private final Set<JaxRsSupportedAnnotation> supportedAnnotations;
+  private final String topPackage;
 
-  private JerseyJaxRsApplication(Set<JaxRsResource> resources, Set<JaxRsSupportedAnnotation> supportedAnnotations) {
+  private JerseyJaxRsApplication(Set<JaxRsResource> resources, Set<JaxRsSupportedAnnotation> supportedAnnotations,
+                                 String topPackage) {
     this.resources = resources;
     this.supportedAnnotations = supportedAnnotations;
+    this.topPackage = topPackage;
   }
 
   private static JerseyJaxRsApplication create(Iterable<JaxRsResource> resources,
-                                               Set<JaxRsSupportedAnnotation> supportedAnnotations) {
+                                               Set<JaxRsSupportedAnnotation> supportedAnnotations, String topPackage) {
     checkNotNull(resources);
 
-    return new JerseyJaxRsApplication(ImmutableSet.copyOf(resources), supportedAnnotations);
+    return new JerseyJaxRsApplication(ImmutableSet.copyOf(resources), supportedAnnotations, topPackage);
   }
 
   public static JerseyJaxRsApplication fromRuntimeResources(
                                                             Iterable<RuntimeResource> runtimeResources,
                                                             final SourceParser sourceParser,
-                                                            Set<JaxRsSupportedAnnotation> supportedAnnotations) {
+                                                            Set<JaxRsSupportedAnnotation> supportedAnnotations, String topPackage) {
     return create(FluentIterable.from(runtimeResources).transform(
                                                                   new Function<RuntimeResource, JaxRsResource>() {
 
@@ -66,7 +62,7 @@ public class JerseyJaxRsApplication implements JaxRsApplication {
                                                                       return JerseyJaxRsResource.create(runtimeResource,
                                                                                                         sourceParser);
                                                                     }
-                                                                  }), supportedAnnotations);
+                                                                  }), supportedAnnotations, topPackage);
   }
 
   @Override
@@ -77,5 +73,10 @@ public class JerseyJaxRsApplication implements JaxRsApplication {
   @Override
   public Set<JaxRsSupportedAnnotation> getSupportedAnnotations() {
     return supportedAnnotations;
+  }
+
+  @Override
+  public String getTopPackage() {
+    return topPackage;
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,14 +43,15 @@ import java.util.Map;
 public class JAXBHelper {
 
 
-  public static File saveSchema(String schema) throws IOException {
+  public static File saveSchema(String schema, File directory) throws IOException {
 
-    File tmpFile = File.createTempFile("schema", ".xml");
+    File tmpFile = File.createTempFile("schema", ".xml", directory);
     FileWriter tmp = new FileWriter(tmpFile);
     tmp.write(schema);
     tmp.close();
     return tmpFile;
   }
+
 
   public static Map<String, JClass> generateClassesFromXmlSchemas(String pack, File file,
                                                                   JCodeModel codeModel) throws GenerationException {

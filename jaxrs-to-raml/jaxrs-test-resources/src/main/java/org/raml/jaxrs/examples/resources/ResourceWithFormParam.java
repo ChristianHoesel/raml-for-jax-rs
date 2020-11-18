@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,8 @@ package org.raml.jaxrs.examples.resources;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 
 @Path("/form")
@@ -28,7 +26,7 @@ public class ResourceWithFormParam {
 
   @POST
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  public String getFormcd(@FormParam("parameter") String parameter) {
+  public String getFormcd(@FormParam("parameter") String parameter, @FormParam("another") int number) {
     return "";
   }
 

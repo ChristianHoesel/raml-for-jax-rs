@@ -18,7 +18,8 @@ and with `@Min`/`@Max` support limited to non decimal minimum/maximum constraint
 - Model object generation based on JSON schemas, with Jackson 1, 2 or Gson annotations;
 - Generation of JAXB-annotated classes based on XML Schemas;
 - Annotations can be generated using one or a combination of three formats: [Gson](GSON.md), [Jackson](JACKSON.md) and [JAXB](JAXB.md)
-- [Generation plugins](jaxrs-code-generator/README.md): the generation of the interfaces and the response classes can be controlled using a set of RAML annotations in the source RAML file.
+- [Generation plugins](jaxrs-code-generator/README.md): the generation of the interfaces and the response classes can be 
+controlled using a set of RAML annotations in the source RAML file.  **The interface for plugins has changed somewhat: please see the documentation**
 
 ### Using the Maven plugin
 There are several examples of projects using the maven plugin.
@@ -32,14 +33,20 @@ The configuration of these projects is documented [here](examples/maven-examples
 - [jaxb-example](examples/maven-examples/jaxb-example/): an example showing JAXB-annotated class generation based on XML Schemas
 - [features](examples/maven-examples/features/): an example showing how the [generation plugins](examples/maven-examples/features/README.md) feature works, includes [several use cases](examples/maven-examples/features/USE_CASES.md)
 
+### Using the Gradle plugin
+The documentation of the Gradle plugin can be found [here](raml-to-jaxrs-gradle-plugin/README.md).
+There are also some examples [here](examples/gradle-examples/).
+
 ### Using the CLI
 The project [raml-to-jaxrs-cli](raml-to-jaxrs-cli/) contains the CLI artifact. It is setup to build a JAR with dependencies which can then be used in the command line.
 
 ```
 usage: ramltojaxrs -d <arg> [-g <arg>] [-m <arg>] [-r <arg>] [-s <arg>]
  -d,--directory <arg>             generation directory
- -g,--generate-types-with <arg>   generate types with plugins (jackson,
-                                  gson, jaxb, javadoc, jsr303)
+ -j,--json-mapper <arg>           jsonschema2pojo annotation types
+                                  (jackson, jackson2 or gson)
+ -g,--generate-types-with <arg>   generate types with plugins
+                                  (jackson, gson, jaxb, javadoc, jsr303)
  -m,--model-package <arg>         model package
  -r,--resource-package <arg>      resource package
  -s,--support-package <arg>       support package

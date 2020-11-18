@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.raml.v2.api.model.v10.methods.Method;
 import org.raml.v2.api.model.v10.resources.Resource;
 
 import javax.annotation.Nullable;
+import javax.lang.model.SourceVersion;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -44,6 +45,7 @@ import static org.apache.commons.lang.math.NumberUtils.isDigits;
  *
  * @author kor
  * @version $Id: $Id
+ *
  */
 public class Names {
 
@@ -68,6 +70,24 @@ public class Names {
 
   public static String methodName(String... name) {
 
+    return checkMethodName(smallCamel(name));
+  }
+
+  private static String checkMethodName(String s) {
+
+    if ("getClass".equals(s)) {
+      return "getClazz";
+    }
+
+    if ("setClass".equals(s)) {
+      return "setClazz";
+    }
+
+    return s;
+  }
+
+  private static String smallCamel(String... name) {
+
     if (name.length == 1 && isBlank(name[0])) {
 
       return "root";
@@ -88,24 +108,31 @@ public class Names {
     Matcher m = LEADING_UNDERSCORES.matcher(name[0]);
     if (m.find()) {
 
-      return m.group() + methodName(name);
+      return m.group() + smallCamel(name);
     } else {
 
-      return methodName(name);
+      return checkForReservedWord(smallCamel(name));
+    }
+  }
+
+  private static String checkForReservedWord(String name) {
+
+    if (SourceVersion.isKeyword(name)) {
+      return name + "Variable";
+    } else {
+
+      return name;
     }
   }
 
 
-  public static String constantName(String value) {
-
-    return buildJavaFriendlyName(value, NameFixer.ALL_UPPER, 0);
-  }
-
   public static String resourceMethodName(GResource resource, GMethod method) {
 
-    if (resource.uriParameters().size() == 0) {
+    List<GParameter> parameters = ResourceUtils.accumulateUriParameters(resource);
 
-      return Names.methodName(method.method(),
+    if (parameters.size() == 0) {
+
+      return Names.smallCamel(method.method(),
                               resource.resourcePath().replaceAll(PATH_REPLACEMENT_TEMPLATE, ""));
     } else {
 
@@ -114,7 +141,7 @@ public class Names {
       elements.add(resource.resourcePath().replaceAll(PATH_REPLACEMENT_TEMPLATE, ""));
       elements.add("By");
       List<String> uriparam =
-          Lists.transform(resource.uriParameters(), new Function<GParameter, String>() {
+          Lists.transform(parameters, new Function<GParameter, String>() {
 
             @Nullable
             @Override
@@ -131,13 +158,15 @@ public class Names {
         }
       }
 
-      return Names.methodName(elements.toArray(new String[elements.size()]));
+      return Names.smallCamel(elements.toArray(new String[elements.size()]));
     }
   }
 
   public static String responseClassName(GResource resource, GMethod method) {
 
-    if (resource.uriParameters().size() == 0) {
+    List<GParameter> parameters = ResourceUtils.accumulateUriParameters(resource);
+
+    if (parameters.size() == 0) {
 
       return Names.typeName(method.method(),
                             resource.resourcePath().replaceAll(PATH_REPLACEMENT_TEMPLATE, ""), "Response");
@@ -148,7 +177,7 @@ public class Names {
       elements.add(resource.resourcePath().replaceAll("\\{[^}]+\\}", ""));
       elements.add("By");
       List<String> uriparam =
-          Lists.transform(resource.uriParameters(), new Function<GParameter, String>() {
+          Lists.transform(parameters, new Function<GParameter, String>() {
 
             @Nullable
             @Override
@@ -171,12 +200,20 @@ public class Names {
   }
 
 
+  public static String javaTypeName(Resource resource, TypeDeclaration declaration) {
+    return typeName(resource.resourcePath(), declaration.name());
+  }
+
   public static String javaTypeName(Resource resource, Method method, TypeDeclaration declaration) {
     return typeName(resource.resourcePath(), method.method(), declaration.name());
   }
 
   public static String ramlTypeName(Resource resource, Method method, TypeDeclaration declaration) {
     return resource.resourcePath() + method.method() + declaration.name();
+  }
+
+  public static String ramlTypeName(Resource resource, TypeDeclaration declaration) {
+    return resource.resourcePath() + declaration.name();
   }
 
   public static String javaTypeName(Resource resource, Method method, Response response,
@@ -218,7 +255,7 @@ public class Names {
 
       String friendlyName = firstOrOthers(format, i, s);
 
-      if (isDigits(left(friendlyName, 1))) {
+      if (i == 0 && isDigits(left(friendlyName, 1))) {
 
         friendlyName = "_" + friendlyName;
       }

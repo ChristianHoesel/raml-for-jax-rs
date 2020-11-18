@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,10 @@ import com.squareup.javapoet.TypeName;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JCodeModel;
 import org.raml.jaxrs.generator.builders.AbstractTypeGenerator;
+import org.raml.jaxrs.generator.builders.BuildPhase;
 import org.raml.jaxrs.generator.builders.CodeContainer;
 import org.raml.jaxrs.generator.builders.CodeModelTypeGenerator;
-import org.raml.jaxrs.generator.builders.BuildPhase;
+import org.raml.jaxrs.generator.ramltypes.GType;
 
 import java.io.IOException;
 
@@ -31,11 +32,13 @@ import java.io.IOException;
  */
 public class XmlSchemaTypeGenerator extends AbstractTypeGenerator<JCodeModel> implements CodeModelTypeGenerator {
 
+  private final GType type;
   private final JCodeModel codeModel;
   private final String packageName;
   private final JClass jclass;
 
-  public XmlSchemaTypeGenerator(JCodeModel codeModel, String packageName, JClass jclass) {
+  public XmlSchemaTypeGenerator(GType type, JCodeModel codeModel, String packageName, JClass jclass) {
+    this.type = type;
     this.codeModel = codeModel;
     this.packageName = packageName;
     this.jclass = jclass;
@@ -51,5 +54,9 @@ public class XmlSchemaTypeGenerator extends AbstractTypeGenerator<JCodeModel> im
   public TypeName getGeneratedJavaType() {
 
     return ClassName.get(packageName, jclass.name());
+  }
+
+  public GType getType() {
+    return type;
   }
 }

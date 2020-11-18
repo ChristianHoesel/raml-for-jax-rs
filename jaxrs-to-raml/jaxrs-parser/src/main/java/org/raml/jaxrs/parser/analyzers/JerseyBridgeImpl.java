@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,12 @@ package org.raml.jaxrs.parser.analyzers;
 
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
-
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.server.model.RuntimeResourceModel;
 
-import java.util.List;
-
 import javax.annotation.Nullable;
+import java.util.List;
 
 class JerseyBridgeImpl implements JerseyBridge {
 
@@ -37,7 +35,7 @@ class JerseyBridgeImpl implements JerseyBridge {
       public Resource apply(@Nullable Class<?> aClass) {
         return Resource.from(aClass);
       }
-    });
+    }).filter(Resource.class); // remove nulls from list
   }
 
   @Override

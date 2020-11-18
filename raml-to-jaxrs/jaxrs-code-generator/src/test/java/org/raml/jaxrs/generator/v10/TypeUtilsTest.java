@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,7 +118,7 @@ public class TypeUtilsTest {
       throw new AssertionError();
     } else {
       final Map<String, GType> decls = new HashMap<>();
-      new V10Finder(ramlModelResult.getApiV10(), new V10TypeRegistry())
+      new V10Finder(null, ramlModelResult.getApiV10())
           .findTypes(new GFinderListener() {
 
             @Override

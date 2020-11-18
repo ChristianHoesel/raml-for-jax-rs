@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.google.common.base.Optional;
 import org.glassfish.jersey.server.model.Parameter;
 import org.raml.jaxrs.model.JaxRsEntity;
 import org.raml.jaxrs.parser.source.SourceParser;
+import org.raml.utilities.types.Cast;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -58,7 +59,6 @@ public class JerseyJaxRsEntity implements JaxRsEntity {
     return new JerseyJaxRsEntity(input.getType(), sourceParser);
   }
 
-
   static Optional<JaxRsEntity> create(Type input, SourceParser sourceParser) {
 
     if (input == null) {
@@ -72,6 +72,8 @@ public class JerseyJaxRsEntity implements JaxRsEntity {
   @Override
   public <T extends Annotation> Optional<T> getAnnotation(Class<T> annotationType) {
 
-    return (Optional<T>) Optional.fromNullable(((Class) input).getAnnotation(annotationType));
+    Class castClass = Cast.toClass(input);
+
+    return (Optional<T>) Optional.fromNullable(castClass.getAnnotation(annotationType));
   }
 }

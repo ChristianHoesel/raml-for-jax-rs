@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import org.raml.jaxrs.parser.source.SourceParser;
 
 import java.lang.annotation.Annotation;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Set;
 
 public class JaxRsParsers {
@@ -27,7 +26,7 @@ public class JaxRsParsers {
   private JaxRsParsers() {}
 
   public static JaxRsParser usingJerseyWith(Path classesPath, SourceParser sourceParser,
-                                            Set<Class<? extends Annotation>> translatedAnnotations) {
-    return JerseyJaxRsParser.create(classesPath, sourceParser, translatedAnnotations);
+                                            Set<Class<? extends Annotation>> translatedAnnotations, String topPackage) {
+    return JerseyJaxRsParser.create(classesPath, sourceParser, translatedAnnotations, topPackage);
   }
 }

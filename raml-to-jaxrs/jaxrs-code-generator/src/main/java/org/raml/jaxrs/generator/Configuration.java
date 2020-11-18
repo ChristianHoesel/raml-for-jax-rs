@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,10 @@ package org.raml.jaxrs.generator;
 
 import org.jsonschema2pojo.AnnotationStyle;
 import org.jsonschema2pojo.GenerationConfig;
-import org.raml.jaxrs.generator.extension.resources.GlobalResourceExtension;
-import org.raml.jaxrs.generator.extension.types.LegacyTypeExtension;
+import org.raml.jaxrs.generator.extension.resources.api.GlobalResourceExtension;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,10 +36,10 @@ public class Configuration {
   private String[] typeConfiguration = new String[0];
   private String resourcePackage;
   private String supportPackage;
-  private List<LegacyTypeExtension> typeExtensions = new ArrayList<>();
 
   private Class<GlobalResourceExtension> defaultCreationExtension;
   private Class<GlobalResourceExtension> defaultFinishExtension;
+  private boolean copySchemas;
 
 
   public void setupBuild(CurrentBuild build) {
@@ -121,9 +118,6 @@ public class Configuration {
 
   }
 
-  public List<LegacyTypeExtension> getTypeExtensions() {
-    return typeExtensions;
-  }
 
   public GenerationConfig createJsonSchemaGenerationConfig()
   {
@@ -144,5 +138,13 @@ public class Configuration {
 
   public Class<GlobalResourceExtension> getDefaultFinishExtension() {
     return defaultFinishExtension;
+  }
+
+  public boolean getCopySchemas() {
+    return copySchemas;
+  }
+
+  public void setCopySchemas(boolean copySchemas) {
+    this.copySchemas = copySchemas;
   }
 }

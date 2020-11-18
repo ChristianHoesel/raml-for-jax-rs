@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 package org.raml.jaxrs.examples.resources;
 
 import org.raml.jaxrs.common.Example;
-import org.raml.jaxrs.handlers.SimpleJaxbTypes;
-import org.raml.jaxrs.common.RamlGenerator;
+import org.raml.pojotoraml.plugins.RamlGenerator;
 import org.raml.jaxrs.examples.Secure;
+import org.raml.jaxrs.handlers.SimpleJaxbClassParser;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -27,11 +27,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 /**
- * Created by Jean-Philippe Belanger on 3/26/17. Just potential zeroes and ones
+ * Created by Jean-Philippe Belanger on 3/26/17. Just potential zeroes and ones:
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@RamlGenerator(SimpleJaxbTypes.class)
+@RamlGenerator(parser = SimpleJaxbClassParser.class)
 @Secure(security = String.class, level = 0)
 public class ConsumedValue {
 
@@ -41,10 +41,8 @@ public class ConsumedValue {
 
   private int id;
 
-  @Example("1")
   private SubType subType;
 
-  @Example("['1','2','3']")
   private List<String> names;
 
   @Example("1")
@@ -53,10 +51,12 @@ public class ConsumedValue {
     return id;
   }
 
+  @Example("1")
   public SubType getSubType() {
     return subType;
   }
 
+  @Example("['1','2','3']")
   public List<String> getNames() {
     return names;
   }

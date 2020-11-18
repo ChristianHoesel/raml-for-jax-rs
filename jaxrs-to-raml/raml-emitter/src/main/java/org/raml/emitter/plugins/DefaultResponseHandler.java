@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,16 @@ package org.raml.emitter.plugins;
 
 import org.raml.api.RamlMediaType;
 import org.raml.api.RamlResourceMethod;
-import org.raml.jaxrs.types.TypeRegistry;
+import org.raml.builder.BodyBuilder;
+import org.raml.builder.MethodBuilder;
+import org.raml.builder.ResponseBuilder;
+import org.raml.builder.TypeBuilder;
 import org.raml.jaxrs.plugins.TypeHandler;
 import org.raml.jaxrs.plugins.TypeSelector;
-import org.raml.utilities.IndentedAppendable;
+import org.raml.jaxrs.types.TypeRegistry;
 
 import java.io.IOException;
+import java.util.Collection;
 
 /**
  * Created by Jean-Philippe Belanger on 3/25/17. Just potential zeroes and ones
@@ -36,32 +40,39 @@ public class DefaultResponseHandler implements ResponseHandler {
   }
 
   @Override
-  public void writeResponses(TypeRegistry typeRegistry, IndentedAppendable writer,
-                             RamlResourceMethod method, TypeSelector selector)
+  public void writeResponses(TypeRegistry typeRegistry, Collection<RamlResourceMethod> methods, TypeSelector selector,
+                             MethodBuilder methodBuilder)
       throws IOException {
-
-    if (!method.getProducedType().isPresent()) {
-      return;
-    }
 
     // We have no clue what the error responses are, however, we want to generate
     // well formed raml, so we pick one.
-    writer.appendLine("200:");
-    writer.indent();
+    ResponseBuilder responseBuilder = null;
+    for (RamlResourceMethod method : methods) {
 
-    writer.appendLine("body:");
-    for (RamlMediaType producedMediaType : method.getProducedMediaTypes()) {
+      if (!method.getProducedType().isPresent()) {
+        continue;
+      }
 
-      writer.indent();
-      writer.appendLine(producedMediaType.toStringRepresentation() + ":");
+      for (RamlMediaType producedMediaType : method.getProducedMediaTypes()) {
 
-      writer.indent();
-      TypeHandler typeHandler = selector.pickTypeWriter(method, producedMediaType);
-      typeHandler.writeType(typeRegistry, writer, producedMediaType, method, method.getProducedType().get());
-      writer.outdent();
-      writer.outdent();
+        if (responseBuilder == null) {
+
+          responseBuilder = ResponseBuilder.response(200);
+        }
+
+        BodyBuilder body = BodyBuilder.body(producedMediaType.toStringRepresentation());
+        responseBuilder.withBodies(body);
+
+        TypeHandler typeHandler = selector.pickTypeWriter(method, producedMediaType);
+        TypeBuilder type = typeHandler.writeType(typeRegistry, method.getProducedType().get());
+        body.ofType(type);
+      }
+
     }
 
-    writer.outdent();
+    if (responseBuilder != null) {
+      methodBuilder.withResponses(responseBuilder);
+    }
   }
+
 }

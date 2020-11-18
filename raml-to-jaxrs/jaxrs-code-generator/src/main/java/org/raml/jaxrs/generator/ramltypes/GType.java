@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,6 @@ import org.raml.jaxrs.generator.CurrentBuild;
 import org.raml.jaxrs.generator.GAbstraction;
 import org.raml.jaxrs.generator.GObjectType;
 
-import java.util.List;
-
 /**
  * Created by Jean-Philippe Belanger on 12/10/16. Just potential zeroes and ones
  */
@@ -37,15 +35,11 @@ public interface GType extends GAbstraction {
 
   boolean isXml();
 
-  boolean isObject();
-
   boolean isArray();
 
   boolean isEnum();
 
-  boolean isUnion();
-
-  List<String> enumValues();
+  boolean isScalar();
 
   String schema();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,8 @@ package org.raml.jaxrs.generator.v10;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import org.raml.jaxrs.generator.ramltypes.GMethod;
-import org.raml.jaxrs.generator.ramltypes.GParameter;
-import org.raml.jaxrs.generator.ramltypes.GRequest;
-import org.raml.jaxrs.generator.ramltypes.GResource;
-import org.raml.jaxrs.generator.ramltypes.GResponse;
+import org.raml.jaxrs.generator.CurrentBuild;
+import org.raml.jaxrs.generator.ramltypes.*;
 import org.raml.v2.api.model.v10.bodies.Response;
 import org.raml.v2.api.model.v10.datamodel.TypeDeclaration;
 import org.raml.v2.api.model.v10.methods.Method;
@@ -37,10 +34,11 @@ public class V10GMethod implements GMethod {
   private V10GResource v10GResource;
   private final Method method;
   private final List<GParameter> queryParameters;
+  private final List<GParameter> headers;
   private final List<GResponse> responses;
   private List<GRequest> requests;
 
-  public V10GMethod(final V10TypeRegistry registry, final V10GResource v10GResource,
+  public V10GMethod(final CurrentBuild currentBuild, final V10GResource v10GResource,
                     final Method method) {
     this.v10GResource = v10GResource;
     this.method = method;
@@ -50,13 +48,8 @@ public class V10GMethod implements GMethod {
       @Override
       public GRequest apply(@Nullable TypeDeclaration input) {
 
-        if (TypeUtils.shouldCreateNewClass(input,
-                                           input.parentTypes().toArray(new TypeDeclaration[0]))) {
-          return new V10GRequest(input, registry.fetchType(v10GResource.implementation(), method,
-                                                           input));
-        } else {
-          return new V10GRequest(input, registry.fetchType(input.type(), input));
-        }
+        return new V10GRequest(input, currentBuild.fetchType(v10GResource.implementation(), method,
+                                                             input));
       }
     });
 
@@ -65,7 +58,7 @@ public class V10GMethod implements GMethod {
       @Nullable
       @Override
       public GResponse apply(@Nullable Response input) {
-        return new V10GResponse(registry, v10GResource, method, input);
+        return new V10GResponse(currentBuild, v10GResource, method, input);
       }
     });
 
@@ -76,7 +69,26 @@ public class V10GMethod implements GMethod {
           @Override
           public GParameter apply(@Nullable TypeDeclaration input) {
 
-            return new V10PGParameter(registry, input);
+            if (TypeUtils.shouldCreateNewClass(input, input.parentTypes().toArray(new TypeDeclaration[0]))) {
+              return new V10PGParameter(input, currentBuild.fetchType(v10GResource.implementation(), method, input));
+            } else {
+              return new V10PGParameter(input, currentBuild.fetchType(input.type(), input));
+            }
+          }
+        });
+
+    this.headers =
+        Lists.transform(this.method.headers(), new Function<TypeDeclaration, GParameter>() {
+
+          @Nullable
+          @Override
+          public GParameter apply(@Nullable TypeDeclaration input) {
+
+            if (TypeUtils.shouldCreateNewClass(input, input.parentTypes().toArray(new TypeDeclaration[0]))) {
+              return new V10PGParameter(input, currentBuild.fetchType(v10GResource.implementation(), method, input));
+            } else {
+              return new V10PGParameter(input, currentBuild.fetchType(input.type(), input));
+            }
           }
         });
   }
@@ -107,8 +119,18 @@ public class V10GMethod implements GMethod {
   }
 
   @Override
+  public List<GParameter> headers() {
+    return headers;
+  }
+
+  @Override
   public List<GResponse> responses() {
     return responses;
+  }
+
+  @Override
+  public String getDescription() {
+    return method.description() != null ? method.description().value() : null;
   }
 
   @Override

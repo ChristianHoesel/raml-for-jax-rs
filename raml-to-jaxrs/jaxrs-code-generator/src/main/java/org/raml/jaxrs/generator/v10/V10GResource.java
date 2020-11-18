@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.raml.jaxrs.generator.v10;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import org.raml.jaxrs.generator.CurrentBuild;
 import org.raml.jaxrs.generator.GAbstractionFactory;
 import org.raml.jaxrs.generator.ramltypes.GMethod;
 import org.raml.jaxrs.generator.ramltypes.GParameter;
@@ -33,21 +34,19 @@ import java.util.List;
  */
 public class V10GResource implements GResource {
 
-  private final GAbstractionFactory factory;
   private final GResource parent;
   private final Resource resource;
   private final List<GResource> subResources;
   private final List<GParameter> uriParameters;
   private final List<GMethod> methods;
 
-  public V10GResource(V10TypeRegistry registry, GAbstractionFactory factory, Resource resource) {
+  public V10GResource(CurrentBuild currentBuild, GAbstractionFactory factory, Resource resource) {
 
-    this(registry, factory, null, resource);
+    this(currentBuild, factory, null, resource);
   }
 
-  public V10GResource(final V10TypeRegistry registry, final GAbstractionFactory factory,
-                      GResource parent, Resource resource) {
-    this.factory = factory;
+  public V10GResource(final CurrentBuild currentBuild, final GAbstractionFactory factory,
+                      final GResource parent, final Resource resource) {
     this.parent = parent;
     this.resource = resource;
     this.subResources = Lists.transform(resource.resources(), new Function<Resource, GResource>() {
@@ -56,17 +55,17 @@ public class V10GResource implements GResource {
       @Override
       public GResource apply(@Nullable Resource input) {
 
-        return factory.newResource(registry, V10GResource.this, input);
+        return factory.newResource(currentBuild, V10GResource.this, input);
       }
     });
 
     this.uriParameters =
         Lists.transform(resource.uriParameters(), new Function<TypeDeclaration, GParameter>() {
 
-          @Nullable
           @Override
           public GParameter apply(@Nullable TypeDeclaration input) {
-            return new V10PGParameter(registry, input);
+
+            return new V10PGParameter(input, currentBuild.fetchType(resource, input));
           }
         });
 
@@ -75,7 +74,7 @@ public class V10GResource implements GResource {
       @Nullable
       @Override
       public GMethod apply(@Nullable Method input) {
-        return new V10GMethod(registry, V10GResource.this, input);
+        return new V10GMethod(currentBuild, V10GResource.this, input);
       }
     });
 
@@ -117,5 +116,10 @@ public class V10GResource implements GResource {
   public String relativePath() {
 
     return resource.relativeUri().value();
+  }
+
+  @Override
+  public String getDescription() {
+    return resource.description() != null ? resource.description().value() : null;
   }
 }

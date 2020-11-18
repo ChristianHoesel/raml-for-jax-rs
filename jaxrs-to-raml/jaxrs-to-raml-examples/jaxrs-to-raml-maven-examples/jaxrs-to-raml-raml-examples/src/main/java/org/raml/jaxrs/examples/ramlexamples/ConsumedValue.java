@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 package org.raml.jaxrs.examples.ramlexamples;
 
 import org.raml.jaxrs.common.Example;
-import org.raml.jaxrs.common.RamlGenerator;
-import org.raml.jaxrs.handlers.SimpleJaxbTypes;
+import org.raml.pojotoraml.plugins.RamlGenerator;
+import org.raml.jaxrs.handlers.SimpleJaxbClassParser;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -30,7 +30,7 @@ import java.util.List;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@RamlGenerator(SimpleJaxbTypes.class)
+@RamlGenerator(parser = SimpleJaxbClassParser.class)
 public class ConsumedValue {
 
   @XmlElement

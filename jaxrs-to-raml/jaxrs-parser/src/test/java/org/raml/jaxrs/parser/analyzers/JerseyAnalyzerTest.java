@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,35 +15,19 @@
  */
 package org.raml.jaxrs.parser.analyzers;
 
-import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
-
-import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.RuntimeResource;
-import org.hamcrest.Matcher;
 import org.junit.Before;
-import org.mockito.InOrder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.raml.jaxrs.model.JaxRsApplication;
 import org.raml.jaxrs.model.JaxRsSupportedAnnotation;
-import org.raml.jaxrs.parser.model.JerseyJaxRsApplication;
 import org.raml.jaxrs.parser.source.SourceParser;
 import org.raml.utilities.iterables.Iterables;
 
-import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.hamcrest.MockitoHamcrest.argThat;
-import static org.raml.utilities.matchers.Matchers.contentEqualsInAnyOrder;
 
 public class JerseyAnalyzerTest {
 
@@ -60,7 +44,7 @@ public class JerseyAnalyzerTest {
 
   private JerseyAnalyzer makeAnalyzerFor(Iterable<Class<?>> classes,
                                          Set<JaxRsSupportedAnnotation> supportedAnnotations) {
-    return JerseyAnalyzer.create(classes, jerseyBridge, sourceParser, supportedAnnotations);
+    return JerseyAnalyzer.create(classes, jerseyBridge, sourceParser, supportedAnnotations, "java.util");
   }
 
   private static <T> Supplier<T> mockSupplierFor(final Class<? extends T> clazz) {
@@ -73,7 +57,7 @@ public class JerseyAnalyzerTest {
     };
   }
 
-  private <T> FluentIterable<T> supplyingNTimes(int noItems, Supplier<? extends T> supplier) {
+  private <T> FluentIterable<? extends T> supplyingNTimes(int noItems, Supplier<? extends T> supplier) {
     return FluentIterable.from(Iterables.suplying(supplier)).limit(noItems);
   }
 

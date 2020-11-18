@@ -39,9 +39,61 @@ types:
         }
       }
     }
-  TypeWithUnderscores:
+  Gaaaakh: |
+    {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "urn:jsonschema:com:zzzzz:advisor:domain:entities:Model",
+      "additionalProperties": false,
+      "properties": {
+      "pageNumber": {
+      "type": "integer"
+      },
+      "pageSize": {
+      "type": "integer"
+      },
+      "numberOfPages": {
+      "type": "integer"
+      },
+      "totalNumberOfElements": {
+      "type": "integer"
+      },
+      "page": {
+      "type": "array",
+      "items": {
+      "$schema": "model.res.json"
+      }
+      }
+      }
+    }
+
+
+  TypeToChange:
+        schema: |
+         {
+           "type": "object",
+           "$schema": "http://json-schema.org/draft-03/schema",
+           "id": "http://jsonschema.net",
+           "required": true,
+           "properties": {
+             "songTitle": {
+               "type": "string",
+               "required": true
+             },
+             "albumId": {
+               "type": "string",
+               "required": true,
+               "minLength": 36,
+               "maxLength": 36
+             }
+           }
+         }
+
+  BizzareType:
     properties:
         _link: string
+        break: string
+        class: string
   AnotherEntry:
     type: Entry
     description: |
@@ -57,6 +109,96 @@ types:
     example:
       firstname: John
 
+  StringEnumeration:
+    enum: ["one", "two"]
+
+  NumericEnumeration:
+    type: integer
+    enum: [1,2,3]
+
+  NameIdentifier:
+    type: string
+    minLength: 1
+    maxLength: 200
+    pattern: "^[A-Za-z0-9_-]+$"
+
+  # Configuration objects
+  Amount:
+    type: object
+    description: |
+    properties:
+      value: number
+      currency: string
+
+  MyInlineObject:
+    type: object
+    properties:
+      parentInline:
+        type: object
+        properties:
+          reference:
+            type: NameIdentifier
+          prop1:
+            type: object
+            properties:
+              amount: Amount
+          prop2:
+            type: object
+            properties:
+              id?: NameIdentifier
+              amount: Amount
+              reference?: string
+  MyValue:
+      description:
+          value: "Created by Jean-Philippe Belanger on 3/26/17. Just potential zeroes and ones"
+      properties:
+          name:
+              type:
+                  type: string
+                  displayName:
+                      value: type
+              displayName:
+                  value: name
+          id:
+                format: int64
+                type: integer
+                displayName:
+                    value: id
+          names:
+              type: array
+              items:
+                      type: string
+              displayName:
+                  value: names
+          subType:
+              type:
+                  type: MyInlineObject
+                  displayName:
+                      value: type
+              displayName:
+                  value: subType
+          uUID:
+            (ramltopojo.types):
+              plugins:
+                - name: core.changeType
+                  arguments: [ java.util.UUID ]
+              type:
+                  type: string
+                  displayName:
+                      value: type
+              displayName:
+                  value: uUID
+      example:
+          strict: false
+          value:
+              uUID: qqchose
+          displayName:
+              value: example
+      displayName:
+          value: MyValue
+
+
+
 traits:
   secured: !include secured/accessToken.raml
 
@@ -69,7 +211,17 @@ resourceTypes:
           body:
             application/json:
               schema: <<resourcePathName|!singularize|!uppercamelcase>>
-
+  paged:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: object
+              properties:
+                contained: <<resourceType>>
+                next: string
+                previous: string
 
 annotationTypes:
   deprecated:
@@ -162,7 +314,41 @@ securedBy: custom_scheme
 uses:
   SongsLib: libraries/songs-library.raml
   ApiLib: libraries/api-library.raml
+  ramltojaxrs: ramltojaxrs.raml
+  ramltopojo: ramltopojo.raml
 
+/paged:
+  type: {paged: {resourceType: MyValue}}
+
+/mappings:
+  description: Maps stuff
+  post:
+    description: Create a mapping
+    body:
+      application/json:
+        type: string
+    responses:
+      201:
+        body:
+         application/json:
+           type: string
+  get:
+    description: Retrieve a mapping
+    queryParameters:
+      source_system:
+        enum: [SYS1, SYS2]
+      source_system_id:
+        type: string
+      destination_system:
+        enum: [SYS1, SYS2]
+    responses:
+      200:
+        description: Returns a single mapping that matches the criteria
+        body:
+          application/json:
+            type: string
+      404:
+        description: No mappings were found with the given search criteria
 /api:
   get:
     queryString:
@@ -185,12 +371,57 @@ uses:
     responses:
       200:
         body: AnotherEntry
+/resources:
+     /subresource:
+        get:
+            responses:
+                200:
+                    body:
+                        application/json:
+                            type: BizzareType
+                            properties:
+                              googoo: string
+/ViewingSession:
+  /{viewingSessionId}:
+    /Attachments:
+      uriParameters:
+        viewingSessionId:
+          type: integer
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                type: string
+
+/ViewingSession2:
+    /{viewingSessionId}:
+        uriParameters:
+            viewingSessionId:
+                type: string
+        /Attachments:
+            get:
+                responses:
+                    200:
+                        body:
+                          application/json:
+                            type: string
+/streamMe:
+  post:
+    body:
+      application/octet-stream:
+    responses:
+      200:
+        body:
+          application/octet-stream:
 /songs:
   displayName: Songs
   description:  Access to all songs inside the music world library.
   (ready):
   is: [ secured ]
   get:
+    headers:
+      HelloMore: string
     securedBy: [ oauth_2_0, null ]
     (monitoringInterval): 30
     queryParameters:
@@ -214,3 +445,85 @@ uses:
 #            application/xml:
 #              type: !include schemas/songs.xsd
 #              example: !include examples/songs.xml
+
+/foo:
+    /bar:
+        get:
+    /bar/{id}:
+        get:
+
+/foo2:
+    /bar:
+        get:
+    /bar/{id}:
+      uriParameters:
+        id:
+          type: string
+      get:
+/jsonThing:
+    /bar:
+        get:
+          (ramltojaxrs.methods):
+            plugins:
+              - name: ramltojaxrs.throwExceptions
+                arguments: [java.lang.Exception]
+
+          responses:
+            200:
+              (ramltojaxrs.responses):
+                plugins:
+                  - name: workaround.entityListType
+                    arguments: [java.lang.String]
+              body:
+                application/json:
+                  type: TypeToChange
+        put:
+          (ramltojaxrs.methods):
+            plugins:
+              - name: workaround.entityListType
+                arguments: [java.lang.String]
+
+          body:
+            application/json:
+              type: TypeToChange
+/theMultiparts/{id}:
+     uriParameters:
+        id:
+          type: string
+     post:
+        body:
+            multipart/form-data:
+                type: object
+                properties:
+                    appBundle:
+                        type:
+                            type: file
+                            displayName:
+                                value: type
+                        displayName:
+                            value: appBundle
+                    configFile:
+                        type:
+                            type: file
+                            displayName:
+                                value: type
+                        displayName:
+                            value: configFile
+                    consumed:
+                        type: User
+                displayName:
+                    value: "multipart/form-data"
+
+
+/urlstuff:
+  post:
+    body:
+      application/x-www-form-urlencoded:
+        type: object
+        properties:
+          paramone: string
+          paramtwo: integer
+          paramthree:
+            type: object
+            properties:
+              maaa: string

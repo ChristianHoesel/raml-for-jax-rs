@@ -36,6 +36,10 @@ Here are the configuration options:
   classes can be found. This is used to extract user provided documentation. It
   defaults to `${project.build.directory}`
 
+### Using the Gradle plugin
+The documentation of the Gradle plugin can be found [here](jaxrs-to-raml-gradle-plugin-wrapper/README.md).
+There are also some examples [here](jaxrs-to-raml-examples/jaxrs-to-raml-gradle-examples/).
+
 ### Using the CLI
 The project [`jaxrs-to-raml-cli`](jaxrs-to-raml-cli/) contains the CLI artifact. It is setup to build a JAR with dependencies which can then be used in the command line.
 
@@ -56,3 +60,7 @@ $ java -jar ./target/jaxrs-to-raml-cli-<version>-jar-with-dependencies.jar -a ..
 ```
 This will generate the RAML file `/tmp/test.raml` from the compiled classes located at
 `../jaxrs-test-resources/target/classes`.
+
+### Turning Java types into RAML types
+
+The way that Java types are turned into RAML types are discussed [here](raml-generator-api/README.md)

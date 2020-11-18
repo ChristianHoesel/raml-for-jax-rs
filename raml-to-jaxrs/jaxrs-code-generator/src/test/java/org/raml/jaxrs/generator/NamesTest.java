@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.raml.v2.api.model.v10.system.types.RelativeUriString;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
@@ -55,7 +56,7 @@ public class NamesTest {
   @Test
   public void buildTypeName() throws Exception {
 
-
+    assertEquals("_200", Names.typeName("_200"));
     assertEquals("Fun", Names.typeName("/fun"));
     assertEquals("Fun", Names.typeName("/fun"));
     assertEquals("CodeBytes", Names.typeName("//code//bytes"));
@@ -64,6 +65,7 @@ public class NamesTest {
     assertEquals("FunAllo", Names.typeName("fun allo"));
     assertEquals("FunAllo", Names.typeName("funAllo"));
     assertEquals("FunAllo", Names.typeName("FunAllo"));
+    assertEquals("Fun200Allo", Names.typeName("fun_200Allo"));
 
     assertEquals("FunAllo", Names.typeName("/FunAllo"));
 
@@ -71,6 +73,14 @@ public class NamesTest {
     assertEquals("FunAllo", Names.typeName("fun", "_allo"));
     assertEquals("FunAllo", Names.typeName("fun", "allo"));
 
+  }
+
+
+  @Test
+  public void buildMethod() {
+
+    assertEquals("getSomething", Names.methodName("get", "something"));
+    assertEquals("getClazz", Names.methodName("get", "class"));
   }
 
   @Test
@@ -89,6 +99,13 @@ public class NamesTest {
     assertEquals("funAllo", Names.variableName("fun allo"));
     assertEquals("funAllo", Names.variableName("fun_allo"));
 
+  }
+
+  @Test
+  public void buildVariableReservedWord() throws Exception {
+
+    assertEquals("ifVariable", Names.variableName("if"));
+    assertEquals("classVariable", Names.variableName("class"));
   }
 
   @Test
@@ -124,6 +141,20 @@ public class NamesTest {
   }
 
   @Test
+  public void buildResponseClassnameWithUndeclaredURIParam() throws Exception {
+
+    when(uriParameter.name()).thenReturn("songId");
+
+    when(method.resource()).thenReturn(resource);
+    when(resource.relativePath()).thenReturn("/songs/{songId}");
+    when(resource.resourcePath()).thenReturn("/songs/{songId}");
+    when(resource.uriParameters()).thenReturn(Collections.singletonList(uriParameter));
+    when(method.method()).thenReturn("get");
+
+    assertEquals("GetSongsBySongIdResponse", Names.responseClassName(resource, method));
+  }
+
+  @Test
   public void buildResponseClassnameWithTwoURIParam() throws Exception {
 
     when(method.resource()).thenReturn(resource);
@@ -142,6 +173,7 @@ public class NamesTest {
     when(resource.resourcePath()).thenReturn("/songs");
     when(resource.uriParameters()).thenReturn(new ArrayList<GParameter>());
     when(method.method()).thenReturn("get");
+    when(resource.relativePath()).thenReturn("path");
 
     assertEquals("getSongs", Names.resourceMethodName(resource, method));
   }
@@ -154,8 +186,21 @@ public class NamesTest {
     when(uriParameter.name()).thenReturn("songId");
     when(resource.uriParameters()).thenReturn(Arrays.asList(uriParameter));
     when(method.method()).thenReturn("get");
+    when(resource.relativePath()).thenReturn("path");
 
     assertEquals("getSongsBySongId", Names.resourceMethodName(resource, method));
+  }
+
+  @Test
+  public void buildResourceMethodNameWithCurlyBracesAndWithoutParameter() throws Exception {
+
+    when(method.resource()).thenReturn(resource);
+    when(resource.resourcePath()).thenReturn("/songs/foo/{songId}");
+    when(uriParameter.name()).thenReturn("songId");
+    when(resource.relativePath()).thenReturn("path");
+    when(method.method()).thenReturn("get");
+
+    assertEquals("getSongsFoo", Names.resourceMethodName(resource, method));
   }
 
   @Test
@@ -165,6 +210,7 @@ public class NamesTest {
     when(resource.resourcePath()).thenReturn("/songs/{songId}/{songId}");
     when(uriParameter.name()).thenReturn("songId");
     when(resource.uriParameters()).thenReturn(Arrays.asList(uriParameter, uriParameter));
+    when(resource.relativePath()).thenReturn("path");
     when(method.method()).thenReturn("get");
 
     assertEquals("getSongsBySongIdAndSongId", Names.resourceMethodName(resource, method));

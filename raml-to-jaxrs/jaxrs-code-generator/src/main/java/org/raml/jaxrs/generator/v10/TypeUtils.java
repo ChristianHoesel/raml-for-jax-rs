@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,7 @@
 package org.raml.jaxrs.generator.v10;
 
 import org.raml.jaxrs.generator.ScalarTypes;
-import org.raml.jaxrs.generator.ramltypes.GParameter;
-import org.raml.v2.api.model.v10.datamodel.JSONTypeDeclaration;
-import org.raml.v2.api.model.v10.datamodel.ObjectTypeDeclaration;
-import org.raml.v2.api.model.v10.datamodel.StringTypeDeclaration;
-import org.raml.v2.api.model.v10.datamodel.TypeDeclaration;
-import org.raml.v2.api.model.v10.datamodel.XMLTypeDeclaration;
+import org.raml.v2.api.model.v10.datamodel.*;
 
 /**
  * Created by Jean-Philippe Belanger on 11/28/16. Just potential zeroes and ones
@@ -93,10 +88,5 @@ public class TypeUtils {
     return false;
   }
 
-
-  public static boolean isComposite(GParameter declaration) {
-
-    return declaration.isComposite();
-  }
 
 }

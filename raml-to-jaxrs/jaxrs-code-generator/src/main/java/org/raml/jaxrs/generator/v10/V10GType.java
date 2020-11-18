@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,11 @@
  */
 package org.raml.jaxrs.generator.v10;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import org.raml.jaxrs.generator.CurrentBuild;
 import org.raml.jaxrs.generator.GObjectType;
 import org.raml.jaxrs.generator.ramltypes.GType;
 import org.raml.v2.api.model.v10.datamodel.TypeDeclaration;
-import org.raml.v2.api.model.v10.datamodel.XMLFacetInfo;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Created by Jean-Philippe Belanger on 12/10/16. Just potential zeroes and ones
@@ -43,20 +38,12 @@ public interface V10GType extends GType {
   boolean isJson();
 
   @Override
-  boolean isUnion();
-
-  @Override
   boolean isXml();
 
-  @Override
-  boolean isObject();
+  boolean isScalar();
 
   @Override
   String schema();
-
-  List<V10GType> parentTypes();
-
-  List<V10GProperty> properties();
 
   @Override
   boolean isArray();
@@ -68,26 +55,11 @@ public interface V10GType extends GType {
   TypeName defaultJavaTypeName(String pack);
 
 
-  ClassName javaImplementationName(String pack);
-
   @Override
   boolean isEnum();
-
-  @Override
-  List<String> enumValues();
-
-  boolean isInline();
-
-  String discriminator();
-
-  String discriminatorValue();
-
-
-  Collection<V10GType> childClasses(String typeName);
 
 
   @Override
   void construct(final CurrentBuild currentBuild, GObjectType objectType);
 
-  XMLFacetInfo xml();
 }

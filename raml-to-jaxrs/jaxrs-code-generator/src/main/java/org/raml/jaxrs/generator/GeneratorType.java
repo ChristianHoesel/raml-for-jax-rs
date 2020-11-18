@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,11 @@
  */
 package org.raml.jaxrs.generator;
 
-import org.raml.jaxrs.generator.builders.BuildPhase;
 import org.raml.jaxrs.generator.ramltypes.GType;
+import org.raml.v2.api.model.v10.datamodel.ObjectTypeDeclaration;
+import org.raml.v2.api.model.v10.datamodel.UnionTypeDeclaration;
 
-import static org.raml.jaxrs.generator.GObjectType.ENUMERATION_TYPE;
-import static org.raml.jaxrs.generator.GObjectType.JSON_OBJECT_TYPE;
-import static org.raml.jaxrs.generator.GObjectType.PLAIN_OBJECT_TYPE;
-import static org.raml.jaxrs.generator.GObjectType.SCALAR;
-import static org.raml.jaxrs.generator.GObjectType.UNION_TYPE;
-import static org.raml.jaxrs.generator.GObjectType.XML_OBJECT_TYPE;
+import static org.raml.jaxrs.generator.GObjectType.*;
 
 /**
  * Created by Jean-Philippe Belanger on 12/7/16. Just potential zeroes and ones
@@ -40,7 +36,7 @@ public class GeneratorType {
       return new GeneratorType(JSON_OBJECT_TYPE, typeDeclaration);
     }
 
-    if (typeDeclaration.isUnion()) {
+    if (typeDeclaration.implementation() instanceof UnionTypeDeclaration) {
 
       return new GeneratorType(UNION_TYPE, typeDeclaration);
     }
@@ -50,7 +46,7 @@ public class GeneratorType {
       return new GeneratorType(XML_OBJECT_TYPE, typeDeclaration);
     }
 
-    if (typeDeclaration.isObject()) {
+    if (typeDeclaration.implementation() instanceof ObjectTypeDeclaration) {
 
       return new GeneratorType(PLAIN_OBJECT_TYPE, typeDeclaration);
     }
@@ -68,10 +64,6 @@ public class GeneratorType {
 
     this.objectType = objectType;
     this.declaredType = declaredType;
-  }
-
-  public GType getDeclaredType() {
-    return declaredType;
   }
 
   public GObjectType getObjectType() {

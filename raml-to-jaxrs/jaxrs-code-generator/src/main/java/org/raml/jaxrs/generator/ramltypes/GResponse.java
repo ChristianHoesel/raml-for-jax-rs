@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,4 +27,8 @@ public interface GResponse extends GAbstraction {
   List<GResponseType> body();
 
   String code();
+
+  List<GParameter> headers();
+
+  String getDescription();
 }

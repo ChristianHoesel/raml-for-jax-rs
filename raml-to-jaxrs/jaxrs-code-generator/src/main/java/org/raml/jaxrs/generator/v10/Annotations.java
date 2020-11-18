@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,12 @@
 package org.raml.jaxrs.generator.v10;
 
 import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
-import org.raml.jaxrs.generator.GenerationException;
-import org.raml.jaxrs.generator.extension.resources.ResourceClassExtension;
-import org.raml.jaxrs.generator.extension.resources.ResourceMethodExtension;
-import org.raml.jaxrs.generator.extension.resources.ResponseClassExtension;
-import org.raml.jaxrs.generator.extension.resources.ResponseMethodExtension;
-import org.raml.jaxrs.generator.extension.types.FieldExtension;
-import org.raml.jaxrs.generator.extension.types.MethodExtension;
-import org.raml.jaxrs.generator.extension.types.TypeExtension;
-import org.raml.jaxrs.generator.ramltypes.GMethod;
-import org.raml.jaxrs.generator.ramltypes.GResource;
-import org.raml.jaxrs.generator.ramltypes.GResponse;
+import org.raml.jaxrs.generator.CurrentBuild;
+import org.raml.jaxrs.generator.GAbstraction;
+import org.raml.ramltopojo.PluginDef;
+import org.raml.v2.api.model.v10.api.Api;
 import org.raml.v2.api.model.v10.common.Annotable;
 import org.raml.v2.api.model.v10.datamodel.TypeInstance;
 import org.raml.v2.api.model.v10.datamodel.TypeInstanceProperty;
@@ -48,211 +42,90 @@ public abstract class Annotations<T> {
   public static Annotations<String> CLASS_NAME = new Annotations<String>() {
 
     @Override
-    public String get(Annotable target, Annotable... others) {
+    public String getWithContext(CurrentBuild currentBuild, Annotable target, Annotable... others) {
 
-      return getWithDefault("types", "classname", null, target, others);
+      return getWithDefault("types", "className", null, target, others);
     }
   };
 
-  public static Annotations<String> IMPLEMENTATION_CLASS_NAME = new Annotations<String>() {
+
+  public static Annotations<List<PluginDef>> RESOURCE_PLUGINS = new Annotations<List<PluginDef>>() {
 
     @Override
-    public String get(Annotable target, Annotable... others) {
-
-      return getWithDefault("types", "implementationClassName", null, target, others);
+    public List<PluginDef> getWithContext(CurrentBuild currentBuild, Annotable target, Annotable... others) {
+      return Annotations.getWithDefault(new TypeInstanceToPluginDefFunction(), "resources", "plugins",
+                                        Collections.<PluginDef>emptyList(),
+                                        target, others);
     }
   };
 
-  public static Annotations<Boolean> USE_PRIMITIVE_TYPE = new Annotations<Boolean>() {
+  public static Annotations<List<PluginDef>> METHOD_PLUGINS = new Annotations<List<PluginDef>>() {
 
     @Override
-    public Boolean get(Annotable target, Annotable... others) {
-
-      return getWithDefault("types", "usePrimitiveType", false, target, others);
+    public List<PluginDef> getWithContext(CurrentBuild currentBuild, Annotable target, Annotable... others) {
+      return Annotations.getWithDefault(new TypeInstanceToPluginDefFunction(), "methods", "plugins",
+                                        Collections.<PluginDef>emptyList(),
+                                        target, others);
     }
-
   };
 
-  public static Annotations<Boolean> ABSTRACT = new Annotations<Boolean>() {
+  public static Annotations<List<PluginDef>> RESPONSE_PLUGINS = new Annotations<List<PluginDef>>() {
 
     @Override
-    public Boolean get(Annotable target, Annotable... others) {
-
-      return getWithDefault("types", "abstract", false, target, others);
+    public List<PluginDef> getWithContext(CurrentBuild currentBuild, Annotable target, Annotable... others) {
+      return Annotations.getWithDefault(new TypeInstanceToPluginDefFunction(), "responses", "plugins",
+                                        Collections.<PluginDef>emptyList(),
+                                        target, others);
     }
   };
 
-  /*
-   * Resources.
-   */
-  public static Annotations<ResourceClassExtension<GResource>> ON_RESOURCE_CLASS_CREATION =
-      new Annotations<ResourceClassExtension<GResource>>() {
-
-        @Override
-        public ResourceClassExtension<GResource> get(Annotable target, Annotable... others) {
-          List<String> classNames = getWithDefault("resources", "onResourceClassCreation", null, target, others);
-
-          List<ResourceClassExtension<GResource>> extension = createExtension(classNames);
-          return new ResourceClassExtension.Composite(extension);
-        }
-      };
-
-  public static Annotations<ResourceClassExtension<GResource>> ON_RESOURCE_CLASS_FINISH =
-      new Annotations<ResourceClassExtension<GResource>>() {
-
-        @Override
-        public ResourceClassExtension<GResource> get(Annotable target, Annotable... others) {
-          List<String> classNames = getWithDefault("resources", "onResourceClassFinish", null, target, others);
-
-          List<ResourceClassExtension<GResource>> extension = createExtension(classNames);
-          return new ResourceClassExtension.Composite(extension);
-        }
-      };
-
-  public static Annotations<ResourceMethodExtension<GMethod>> ON_METHOD_CREATION =
-      new Annotations<ResourceMethodExtension<GMethod>>() {
-
-        @Override
-        public ResourceMethodExtension<GMethod> get(Annotable target, Annotable... others) {
-
-          List<String> classNames = getWithDefault("methods", "onResourceMethodCreation", null, target, others);
-
-          List<ResourceMethodExtension<GMethod>> extension = createExtension(classNames);
-          return new ResourceMethodExtension.Composite(extension);
-        }
-      };
-
-  public static Annotations<ResourceMethodExtension<GMethod>> ON_METHOD_FINISH =
-      new Annotations<ResourceMethodExtension<GMethod>>() {
-
-        @Override
-        public ResourceMethodExtension<GMethod> get(Annotable target, Annotable... others) {
-          List<String> classNames = getWithDefault("methods", "onResourceMethodFinish", null, target, others);
-
-          List<ResourceMethodExtension<GMethod>> extension = createExtension(classNames);
-          return new ResourceMethodExtension.Composite(extension);
-        }
-      };
-
-
-
-  public static Annotations<ResponseClassExtension<GMethod>> ON_RESPONSE_CLASS_CREATION =
-      new Annotations<ResponseClassExtension<GMethod>>() {
-
-        @Override
-        public ResponseClassExtension<GMethod> get(Annotable target, Annotable... others) {
-          List<String> classNames = getWithDefault("methods", "onResponseClassCreation", null, target, others);
-
-          List<ResponseClassExtension<GMethod>> extension = createExtension(classNames);
-          return new ResponseClassExtension.Composite(extension);
-        }
-      };
-
-  public static Annotations<ResponseClassExtension<GMethod>> ON_RESPONSE_CLASS_FINISH =
-      new Annotations<ResponseClassExtension<GMethod>>() {
-
-        @Override
-        public ResponseClassExtension<GMethod> get(Annotable target, Annotable... others) {
-          List<String> classNames = getWithDefault("methods", "onResponseClassFinish", null, target, others);
-
-          List<ResponseClassExtension<GMethod>> extension = createExtension(classNames);
-          return new ResponseClassExtension.Composite(extension);
-        }
-      };
-
-
-
-  public static Annotations<ResponseMethodExtension<GResponse>> ON_RESPONSE_METHOD_CREATION =
-      new Annotations<ResponseMethodExtension<GResponse>>() {
-
-        @Override
-        public ResponseMethodExtension<GResponse> get(Annotable target, Annotable... others) {
-
-          List<String> classNames = getWithDefault("responses", "onResponseMethodCreation", null, target, others);
-
-          List<ResponseMethodExtension<GResponse>> extension = createExtension(classNames);
-          return new ResponseMethodExtension.Composite(extension);
-        }
-      };
-
-  public static Annotations<ResponseMethodExtension<GResponse>> ON_RESPONSE_METHOD_FINISH =
-      new Annotations<ResponseMethodExtension<GResponse>>() {
-
-        @Override
-        public ResponseMethodExtension<GResponse> get(Annotable target, Annotable... others) {
-          List<String> classNames = getWithDefault("responses", "onResponseMethodFinish", null, target, others);
-
-          List<ResponseMethodExtension<GResponse>> extension = createExtension(classNames);
-          return new ResponseMethodExtension.Composite(extension);
-        }
-      };
-
-
-  /*
-   * Types
-   */
-  public static Annotations<TypeExtension> ON_TYPE_CLASS_CREATION = new Annotations<TypeExtension>() {
+  public static Annotations<List<PluginDef>> RESPONSE_CLASS_PLUGINS = new Annotations<List<PluginDef>>() {
 
     @Override
-    public TypeExtension get(Annotable target, Annotable... others) {
-      List<String> classNames = getWithDefault("types", "onTypeCreation", null, target, others);
-
-      List<TypeExtension> extension = createExtension(classNames);
-      return new TypeExtension.Composite(extension);
+    public List<PluginDef> getWithContext(CurrentBuild currentBuild, Annotable target, Annotable... others) {
+      return Annotations.getWithDefault(new TypeInstanceToPluginDefFunction(), "responseClasses", "plugins",
+                                        Collections.<PluginDef>emptyList(),
+                                        target, others);
     }
   };
 
-  public static Annotations<TypeExtension> ON_TYPE_CLASS_FINISH = new Annotations<TypeExtension>() {
+  private static class TypeInstanceToPluginDefFunction implements Function<TypeInstance, PluginDef> {
 
     @Override
-    public TypeExtension get(Annotable target, Annotable... others) {
-      List<String> classNames = getWithDefault("types", "onTypeFinish", null, target, others);
+    public PluginDef apply(@Nullable TypeInstance input) {
 
-      List<TypeExtension> extension = createExtension(classNames);
-      return new TypeExtension.Composite(extension);
-    }
-  };
+      if (input.properties().size() == 0) {
 
-  public static Annotations<FieldExtension> ON_TYPE_FIELD_CREATION = new Annotations<FieldExtension>() {
+        return new PluginDef((String) input.value(), Collections.<String>emptyList());
+      } else {
+        if (input.properties().size() == 1) {
 
-    @Override
-    public FieldExtension get(Annotable target, Annotable... others) {
-      List<String> classNames = getWithDefault("types", "onFieldCreation", null, target, others);
-      List<FieldExtension> extensions = createExtension(classNames);
+          return new PluginDef((String) input.properties().get(0).value().value(), Collections.<String>emptyList());
+        } else {
+          return new PluginDef((String) input.properties().get(0).value().value(), Lists.transform(input.properties().get(1)
+              .values(), new Function<TypeInstance, String>() {
 
-      return new FieldExtension.Composite(extensions);
-    }
-  };
-
-  public static Annotations<MethodExtension> ON_TYPE_METHOD_CREATION = new Annotations<MethodExtension>() {
-
-    @Override
-    public MethodExtension get(Annotable target, Annotable... others) {
-      List<String> classNames = getWithDefault("types", "onMethodCreation", null, target, others);
-      List<MethodExtension> extension = createExtension(classNames);
-      return new MethodExtension.Composite(extension);
-    }
-  };
-
-  private static <T> List<T> createExtension(List<String> classNames) {
-    if (classNames == null) {
-
-      return Collections.emptyList();
-    } else {
-
-      return Lists.transform(classNames, new Function<String, T>() {
-
-        @Nullable
-        @Override
-        public T apply(@Nullable String className) {
-
-          try {
-            return (T) Class.forName(className).newInstance();
-          } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-            throw new GenerationException("Cannot find resource creation extension: " + className, e);
+            @Nullable
+            @Override
+            public String apply(@Nullable TypeInstance input) {
+              return (String) input.value();
+            }
           }
+              ));
         }
-      });
+      }
+    }
+  }
+
+  private static <T, R> R getWithDefault(Function<TypeInstance, T> convert, String annotationName, String propName, R def,
+                                         Annotable target,
+                                         Annotable... others) {
+    R b = org.raml.ramltopojo.Annotations.evaluate(convert, annotationName, propName, target, others);
+    if (b == null) {
+
+      return def;
+    } else {
+      return b;
     }
   }
 
@@ -333,11 +206,11 @@ public abstract class Annotations<T> {
     return null;
   }
 
-  public abstract T get(Annotable target, Annotable... others);
+  public abstract T getWithContext(CurrentBuild currentBuild, Annotable target, Annotable... others);
 
-  public T get(T def, Annotable annotable, Annotable... others) {
+  public T getValueWithDefault(T def, Annotable annotable, Annotable... others) {
 
-    T t = get(annotable, others);
+    T t = getWithContext(null, annotable, others);
     if (t == null) {
 
       return def;
@@ -348,26 +221,59 @@ public abstract class Annotations<T> {
 
   public T get(V10GType type) {
 
-    return get(type.implementation());
+    return getWithContext(null, type.implementation());
   }
 
   public T get(V10GResource resource) {
 
-    return get(resource.implementation());
+    return getWithContext(null, resource.implementation());
   }
 
   public T get(V10GMethod method) {
 
-    return get(method.implementation());
+    return getWithContext(null, method.implementation());
   }
 
   public T get(V10GResponse response) {
 
-    return get(response.implementation());
+    return getWithContext(null, response.implementation());
   }
 
   public T get(T def, V10GType type) {
 
     return get(def, type.implementation());
   }
+
+  public T get(T def, Annotable type) {
+
+    return getValueWithDefault(def, type);
+  }
+
+  public T get(Annotable type) {
+
+    return getValueWithDefault(null, type);
+  }
+
+  public T get(T def, Annotable type, Annotable... others) {
+
+    return getValueWithDefault(def, type, others);
+  }
+
+  // this is not pretty
+  public T get(T def, Api api, GAbstraction... others) {
+
+    if (api == null) {
+      return def;
+    }
+
+    return getValueWithDefault(def, api, FluentIterable.of(others).transform(new Function<GAbstraction, Annotable>() {
+
+      @Nullable
+      @Override
+      public Annotable apply(@Nullable GAbstraction o) {
+        return (Annotable) o.implementation();
+      }
+    }).toArray(Annotable.class));
+  }
+
 }

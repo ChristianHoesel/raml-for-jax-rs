@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,10 @@
 package org.raml.jaxrs.parser.source;
 
 import com.google.common.base.Optional;
-
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.JavaDoc;
 import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.MethodHolder;
-import org.jboss.forge.roaster.model.TypeHolder;
 import org.jboss.forge.roaster.model.source.JavaDocSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 import org.raml.utilities.format.Joiners;
@@ -70,7 +68,7 @@ class RoasterSourceParser implements SourceParser {
   @Override
   public Optional<String> getDocumentationFor(Type clazz) {
 
-    Path classFileRelativePath = Utilities.getSourceFileRelativePath((Class) clazz);
+    Path classFileRelativePath = Utilities.getSourceFileRelativePath(clazz);
     Path relativeFromRoot = sourceRoot.resolve(classFileRelativePath);
 
     if (!Files.isRegularFile(relativeFromRoot)) {

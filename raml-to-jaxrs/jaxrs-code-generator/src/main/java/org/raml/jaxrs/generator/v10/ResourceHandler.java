@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,12 +34,12 @@ public class ResourceHandler {
     this.build = build;
   }
 
-  public void handle(V10TypeRegistry registry, final Resource resource) {
+  public void handle(final Resource resource) {
 
     GAbstractionFactory factory = new GAbstractionFactory();
 
     ResourceBuilder rg =
-        new ResourceBuilder(build, factory.newResource(registry, resource),
+        new ResourceBuilder(build, factory.newResource(build, resource),
                             resource.resourcePath(), resource.relativeUri().value());
 
     build.newResource(rg);

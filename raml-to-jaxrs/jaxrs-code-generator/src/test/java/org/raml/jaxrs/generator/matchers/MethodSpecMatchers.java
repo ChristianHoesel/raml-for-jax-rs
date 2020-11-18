@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@ package org.raml.jaxrs.generator.matchers;
 
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
 
@@ -29,11 +27,22 @@ public class MethodSpecMatchers {
 
   public static Matcher<MethodSpec> methodName(Matcher<String> match) {
 
-    return new FeatureMatcher<MethodSpec, String>(match, "type name", "type name") {
+    return new FeatureMatcher<MethodSpec, String>(match, "method name", "method name") {
 
       @Override
       protected String featureValueOf(MethodSpec actual) {
         return actual.name;
+      }
+    };
+  }
+
+  public static Matcher<MethodSpec> codeContent(Matcher<String> match) {
+
+    return new FeatureMatcher<MethodSpec, String>(match, "method content", "method content") {
+
+      @Override
+      protected String featureValueOf(MethodSpec actual) {
+        return actual.code.toString();
       }
     };
   }

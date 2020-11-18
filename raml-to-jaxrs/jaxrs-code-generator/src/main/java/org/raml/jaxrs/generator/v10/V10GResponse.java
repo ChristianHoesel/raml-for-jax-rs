@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package org.raml.jaxrs.generator.v10;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import org.raml.jaxrs.generator.CurrentBuild;
+import org.raml.jaxrs.generator.ramltypes.GParameter;
 import org.raml.jaxrs.generator.ramltypes.GResponse;
 import org.raml.jaxrs.generator.ramltypes.GResponseType;
 import org.raml.v2.api.model.v10.bodies.Response;
@@ -31,13 +33,12 @@ import java.util.List;
  */
 public class V10GResponse implements GResponse {
 
-  private V10GResource v10GResource;
   private final Response response;
   private final List<GResponseType> bodies;
+  private final List<GParameter> headers;
 
-  public V10GResponse(final V10TypeRegistry registry, final V10GResource v10GResource,
+  public V10GResponse(final CurrentBuild currentBuild, final V10GResource v10GResource,
                       final Method method, final Response response) {
-    this.v10GResource = v10GResource;
     this.response = response;
     this.bodies =
         Lists.transform(this.response.body(), new Function<TypeDeclaration, GResponseType>() {
@@ -45,18 +46,19 @@ public class V10GResponse implements GResponse {
           @Nullable
           @Override
           public GResponseType apply(@Nullable TypeDeclaration input) {
-            if (TypeUtils.shouldCreateNewClass(input,
-                                               input.parentTypes().toArray(new TypeDeclaration[0]))) {
-              return new V10GResponseType(input, registry.fetchType(v10GResource.implementation(),
-                                                                    method, response, input));
-            } else {
-              // return new V10GResponseType(input, V10GTypeFactory
-              // .createExplicitlyNamedType(registry, input.type(), input));
-              return new V10GResponseType(input, registry.fetchType(input.type(), input));
-
-            }
+            return new V10GResponseType(input, currentBuild.fetchType(v10GResource.implementation(),
+                                                                      method, response, input));
           }
         });
+
+    this.headers = Lists.transform(response.headers(), new Function<TypeDeclaration, GParameter>() {
+
+      @Nullable
+      @Override
+      public GParameter apply(@Nullable TypeDeclaration input) {
+        return new V10PGParameter(input, currentBuild.fetchType(input.type(), input));
+      }
+    });
   }
 
   @Override
@@ -72,5 +74,15 @@ public class V10GResponse implements GResponse {
   @Override
   public String code() {
     return response.code().value();
+  }
+
+  @Override
+  public List<GParameter> headers() {
+    return headers;
+  }
+
+  @Override
+  public String getDescription() {
+    return response.description() != null ? response.description().value() : null;
   }
 }

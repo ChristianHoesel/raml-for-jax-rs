@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,7 @@
  */
 package org.raml.jaxrs.examples.annotations;
 
-import org.raml.jaxrs.common.Example;
-import org.raml.jaxrs.common.Examples;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 
 @Path("/realtypes")
 public class ResourceWithRealTypes {
@@ -40,6 +33,7 @@ public class ResourceWithRealTypes {
   @GET
   @Produces("application/json")
   @Deprecated
+  @Secure(security = ResourceWithRealTypes.class, level = 4)
   public ProducedJsonValue getWithQueryParameters(ConsumedValue consumed) {
     return null;
   }

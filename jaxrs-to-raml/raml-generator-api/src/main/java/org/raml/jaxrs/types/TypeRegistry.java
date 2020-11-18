@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,15 @@
  */
 package org.raml.jaxrs.types;
 
+import com.google.common.base.Optional;
 import org.raml.api.RamlEntity;
-import org.raml.jaxrs.emitters.AnnotationInstanceEmitter;
-import org.raml.jaxrs.plugins.TypeScanner;
-import org.raml.utilities.IndentedAppendable;
+import org.raml.api.RamlSupportedAnnotation;
+import org.raml.builder.RamlDocumentBuilder;
+import org.raml.jaxrs.emitters.ExampleModelEmitter;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,24 +33,42 @@ public class TypeRegistry {
 
   private Map<String, RamlType> types = new HashMap<>();
 
-  public RamlType registerType(String name, RamlEntity type, TypeScanner scanner) {
+  public RamlType registerType(final String name, final RamlEntity type) {
 
     if (types.containsKey(name)) {
       return types.get(name);
     } else {
 
-      RamlType ramlType = new RamlType(type);
-      types.put(name, ramlType);
+      final RamlType ramlType = new RamlType(type.getType(), new Descriptor() {
 
-      scanner.scanType(this, type, ramlType);
+        @Override
+        public Optional<String> describe() {
+          return type.getDescription();
+        }
+      });
+
+
+      if (ramlType.isRamlScalarType()) {
+        return ramlType;
+      }
+
+      types.put(name, ramlType);
       return ramlType;
     }
   }
 
-  public void writeAll(AnnotationInstanceEmitter annotationInstanceEmitter, IndentedAppendable writer) throws IOException {
+  public void writeAll(List<RamlSupportedAnnotation> supportedAnnotations, Package topPackage, RamlDocumentBuilder documentBuilder)
+      throws IOException {
     for (RamlType ramlType : types.values()) {
 
-      ramlType.write(annotationInstanceEmitter, writer);
+      ramlType.write(supportedAnnotations, topPackage, documentBuilder);
     }
+
+    for (RamlType ramlType : RamlType.getAllTypes().values()) {
+
+      ramlType.emitExamples();
+    }
+
   }
+
 }

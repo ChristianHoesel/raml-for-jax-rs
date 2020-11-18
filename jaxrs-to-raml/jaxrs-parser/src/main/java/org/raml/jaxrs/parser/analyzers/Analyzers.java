@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.raml.jaxrs.parser.analyzers;
 import org.raml.jaxrs.model.JaxRsSupportedAnnotation;
 import org.raml.jaxrs.parser.source.SourceParser;
 
-import java.util.List;
 import java.util.Set;
 
 public class Analyzers {
@@ -26,7 +25,7 @@ public class Analyzers {
   private Analyzers() {}
 
   public static Analyzer jerseyAnalyzerFor(Iterable<Class<?>> classes, SourceParser sourceParser,
-                                           Set<JaxRsSupportedAnnotation> supportedAnnotations) {
-    return JerseyAnalyzer.create(classes, new JerseyBridgeImpl(), sourceParser, supportedAnnotations);
+                                           Set<JaxRsSupportedAnnotation> supportedAnnotations, String topPackage) {
+    return JerseyAnalyzer.create(classes, new JerseyBridgeImpl(), sourceParser, supportedAnnotations, topPackage);
   }
 }

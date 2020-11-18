@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,64 +15,59 @@
  */
 package org.raml.jaxrs.generator;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.FluentIterable;
+import com.google.common.io.Files;
 import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.sun.codemodel.JCodeModel;
+import org.apache.commons.io.FileUtils;
 import org.jsonschema2pojo.GenerationConfig;
-import org.raml.jaxrs.generator.builders.BuildPhase;
-import org.raml.jaxrs.generator.builders.CodeContainer;
-import org.raml.jaxrs.generator.builders.CodeModelTypeGenerator;
-import org.raml.jaxrs.generator.builders.JavaPoetTypeGenerator;
-import org.raml.jaxrs.generator.builders.TypeGenerator;
-import org.raml.jaxrs.generator.builders.extensions.types.GsonExtension;
-import org.raml.jaxrs.generator.builders.extensions.types.jackson.JacksonExtensions;
-import org.raml.jaxrs.generator.builders.extensions.types.JavadocTypeLegacyExtension;
-import org.raml.jaxrs.generator.builders.extensions.types.JaxbTypeExtension;
-import org.raml.jaxrs.generator.builders.extensions.types.Jsr303Extension;
-import org.raml.jaxrs.generator.builders.extensions.types.TypeExtensionList;
+import org.raml.jaxrs.generator.builders.*;
 import org.raml.jaxrs.generator.builders.resources.ResourceGenerator;
-import org.raml.jaxrs.generator.extension.resources.GlobalResourceExtension;
-import org.raml.jaxrs.generator.extension.resources.ResourceClassExtension;
-import org.raml.jaxrs.generator.extension.resources.ResourceMethodExtension;
-import org.raml.jaxrs.generator.extension.resources.ResponseClassExtension;
-import org.raml.jaxrs.generator.extension.resources.ResponseMethodExtension;
-import org.raml.jaxrs.generator.extension.types.FieldExtension;
-import org.raml.jaxrs.generator.extension.types.LegacyTypeExtension;
-import org.raml.jaxrs.generator.extension.types.MethodExtension;
-import org.raml.jaxrs.generator.extension.types.TypeExtension;
+import org.raml.jaxrs.generator.extension.resources.api.*;
 import org.raml.jaxrs.generator.ramltypes.GMethod;
 import org.raml.jaxrs.generator.ramltypes.GResource;
 import org.raml.jaxrs.generator.ramltypes.GResponse;
+import org.raml.jaxrs.generator.v10.*;
 import org.raml.jaxrs.generator.v10.Annotations;
-import org.raml.jaxrs.generator.v10.V10GMethod;
-import org.raml.jaxrs.generator.v10.V10GResource;
-import org.raml.jaxrs.generator.v10.V10GResponse;
-import org.raml.jaxrs.generator.v10.V10GType;
+import org.raml.jaxrs.generator.v10.types.V10RamlToPojoGType;
+import org.raml.ramltopojo.*;
+import org.raml.ramltopojo.plugin.PluginManager;
 import org.raml.v2.api.model.v10.api.Api;
+import org.raml.v2.api.model.v10.bodies.Response;
+import org.raml.v2.api.model.v10.datamodel.JSONTypeDeclaration;
+import org.raml.v2.api.model.v10.datamodel.TypeDeclaration;
+import org.raml.v2.api.model.v10.datamodel.XMLTypeDeclaration;
+import org.raml.v2.api.model.v10.methods.Method;
+import org.raml.v2.api.model.v10.resources.Resource;
 
+import javax.annotation.Nullable;
 import javax.lang.model.element.Modifier;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static java.util.Collections.singletonList;
 
 /**
  * Created by Jean-Philippe Belanger on 10/26/16. The art of building stuff is here. Factory for building root stuff.
  */
 public class CurrentBuild {
 
-  private final GFinder typeFinder;
   private final Api api;
+  private ExtensionManager extensionManager;
+  private final File ramlDirectory;
 
   private final List<ResourceGenerator> resources = new ArrayList<>();
   private final Map<String, TypeGenerator> builtTypes = new ConcurrentHashMap<>();
-  private TypeExtensionList typeExtensionList = new TypeExtensionList();
+  private final PluginManager pluginManager = PluginManager.createPluginManager("META-INF/ramltojaxrs-plugin.properties");
+
+  private GlobalResourceExtension.Composite resourceExtensionList = new GlobalResourceExtension.Composite();
+
   private Map<String, GeneratorType> foundTypes = new HashMap<>();
 
   private final List<JavaPoetTypeGenerator> supportGenerators = new ArrayList<>();
@@ -81,13 +76,57 @@ public class CurrentBuild {
 
   private ArrayListMultimap<JavaPoetTypeGenerator, JavaPoetTypeGenerator> internalTypesPerClass = ArrayListMultimap.create();
 
-  public CurrentBuild(GFinder typeFinder, Api api) {
+  private File schemaRepository;
 
-    this.typeFinder = typeFinder;
+  private RamlToPojo ramlToPojo;
+
+  public CurrentBuild(Api api, ExtensionManager extensionManager, File ramlDirectory) {
+
     this.api = api;
+    this.extensionManager = extensionManager;
+    this.ramlDirectory = ramlDirectory;
     this.configuration = Configuration.defaultConfiguration();
   }
 
+
+  public File getRamlDirectory() {
+    return ramlDirectory;
+  }
+
+  public RamlToPojo fetchRamlToPojoBuilder() {
+
+    if (ramlToPojo == null) {
+
+      ramlToPojo = RamlToPojoBuilder.builder(this.api)
+          .inPackage(getModelPackage())
+          .fetchTypes(TypeFetchers.fromAnywhere())
+          .build(FluentIterable.from(this.typeConfiguration()).transform(new Function<String, String>() {
+
+            @Nullable
+            @Override
+            public String apply(@Nullable String s) {
+              if (s.contains(".")) {
+                return s;
+              } else {
+                return "core." + s;
+              }
+            }
+          }).toList());
+    }
+
+    return ramlToPojo;
+  }
+
+
+  public File getSchemaRepository() {
+
+    if (schemaRepository == null) {
+
+      schemaRepository = Files.createTempDir();
+    }
+
+    return schemaRepository;
+  }
 
   public Api getApi() {
     return api;
@@ -109,55 +148,75 @@ public class CurrentBuild {
 
   public void generate(final File rootDirectory) throws IOException {
 
-    if (resources.size() > 0) {
-      ResponseSupport.buildSupportClasses(rootDirectory, getSupportPackage());
-    }
-
-    for (TypeGenerator typeGenerator : builtTypes.values()) {
-
-      if (typeGenerator instanceof JavaPoetTypeGenerator) {
-
-        buildTypeTree(rootDirectory, (JavaPoetTypeGenerator) typeGenerator);
-        continue;
+    try {
+      if (resources.size() > 0) {
+        ResponseSupport.buildSupportClasses(rootDirectory, getSupportPackage());
       }
 
-      if (typeGenerator instanceof CodeModelTypeGenerator) {
-        CodeModelTypeGenerator b = (CodeModelTypeGenerator) typeGenerator;
-        b.output(new CodeContainer<JCodeModel>() {
+      for (TypeGenerator typeGenerator : builtTypes.values()) {
+
+        if (typeGenerator instanceof RamlToPojoTypeGenerator) {
+
+          RamlToPojoTypeGenerator ramlToPojoTypeGenerator = (RamlToPojoTypeGenerator) typeGenerator;
+          ramlToPojoTypeGenerator.output(new CodeContainer<ResultingPojos>() {
+
+            @Override
+            public void into(ResultingPojos g) throws IOException {
+              g.createFoundTypes(rootDirectory.getAbsolutePath());
+            }
+          });
+        }
+        if (typeGenerator instanceof JavaPoetTypeGenerator) {
+
+          buildTypeTree(rootDirectory, (JavaPoetTypeGenerator) typeGenerator);
+          continue;
+        }
+
+        if (typeGenerator instanceof CodeModelTypeGenerator) {
+          CodeModelTypeGenerator b = (CodeModelTypeGenerator) typeGenerator;
+          b.output(new CodeContainer<JCodeModel>() {
+
+            @Override
+            public void into(JCodeModel g) throws IOException {
+
+              g.build(rootDirectory);
+            }
+          });
+        }
+
+      }
+
+
+      for (ResourceGenerator resource : resources) {
+        resource.output(new CodeContainer<TypeSpec>() {
 
           @Override
-          public void into(JCodeModel g) throws IOException {
-
-            g.build(rootDirectory);
+          public void into(TypeSpec g) throws IOException {
+            JavaFile.Builder file = JavaFile.builder(getResourcePackage(), g).skipJavaLangImports(true);
+            file.build().writeTo(rootDirectory);
           }
         });
       }
 
-    }
+      for (JavaPoetTypeGenerator typeGenerator : supportGenerators) {
 
+        typeGenerator.output(new CodeContainer<TypeSpec.Builder>() {
 
-    for (ResourceGenerator resource : resources) {
-      resource.output(new CodeContainer<TypeSpec>() {
+          @Override
+          public void into(TypeSpec.Builder g) throws IOException {
 
-        @Override
-        public void into(TypeSpec g) throws IOException {
-          JavaFile.Builder file = JavaFile.builder(getResourcePackage(), g);
-          file.build().writeTo(rootDirectory);
-        }
-      });
-    }
+            JavaFile.Builder file = JavaFile.builder(getSupportPackage(), g.build()).skipJavaLangImports(true);
+            file.build().writeTo(rootDirectory);
+          }
+        });
+      }
 
-    for (JavaPoetTypeGenerator typeGenerator : supportGenerators) {
+    } finally {
 
-      typeGenerator.output(new CodeContainer<TypeSpec.Builder>() {
+      if (schemaRepository != null) {
 
-        @Override
-        public void into(TypeSpec.Builder g) throws IOException {
-
-          JavaFile.Builder file = JavaFile.builder(getSupportPackage(), g.build());
-          file.build().writeTo(rootDirectory);
-        }
-      });
+        FileUtils.deleteDirectory(schemaRepository);
+      }
     }
   }
 
@@ -183,7 +242,7 @@ public class CurrentBuild {
 
         if (containing != null) {
 
-          JavaFile.Builder file = JavaFile.builder(getModelPackage(), containing.build());
+          JavaFile.Builder file = JavaFile.builder(getModelPackage(), containing.build()).skipJavaLangImports(true);
           file.build().writeTo(rootDirectory);
         }
       }
@@ -211,7 +270,7 @@ public class CurrentBuild {
           }
 
           if (containing != null) {
-            JavaFile.Builder file = JavaFile.builder(getModelPackage(), containing.build());
+            JavaFile.Builder file = JavaFile.builder(getModelPackage(), containing.build()).skipJavaLangImports(true);
             file.build().writeTo(rootDirectory);
           }
         }
@@ -219,13 +278,6 @@ public class CurrentBuild {
                BuildPhase.IMPLEMENTATION);
     }
   }
-
-
-  public LegacyTypeExtension withTypeListeners() {
-
-    return typeExtensionList;
-  }
-
 
   public void newGenerator(String ramlTypeName, TypeGenerator generator) {
 
@@ -237,172 +289,271 @@ public class CurrentBuild {
     supportGenerators.add(generator);
   }
 
-  public <T extends TypeGenerator> T getBuiltType(String ramlType) {
-
-    TypeGenerator type = builtTypes.get(ramlType);
-    if (type == null) {
-
-      throw new GenerationException("no such type " + ramlType);
-    }
-
-    return (T) type;
-  }
-
   public void newResource(ResourceGenerator rg) {
 
     resources.add(rg);
   }
 
-  public void constructClasses() {
+  public void constructClasses(GFinder finder) {
 
     TypeFindingListener listener = new TypeFindingListener(foundTypes);
-    typeFinder.findTypes(listener);
+    finder.findTypes(listener);
 
+    finder.setupConstruction(this);
     for (GeneratorType type : foundTypes.values()) {
 
       type.construct(this);
     }
   }
 
-  public void newImplementation(JavaPoetTypeGenerator objectType) {
 
-    implementations.add(objectType);
+  public List<String> typeConfiguration() {
+
+    return Arrays.asList(this.configuration.getTypeConfiguration());
   }
 
   public void setConfiguration(Configuration configuration) {
     this.configuration = configuration;
-
-    for (String s : this.configuration.getTypeConfiguration()) {
-
-      if (s.equals("jackson")) {
-        typeExtensionList.addExtension(new JacksonExtensions());
-      }
-
-      if (s.equals("jaxb")) {
-
-        typeExtensionList.addExtension(new JaxbTypeExtension());
-      }
-
-      if (s.equals("gson")) {
-
-        typeExtensionList.addExtension(new GsonExtension());
-      }
-
-      if (s.equals("javadoc")) {
-
-        typeExtensionList.addExtension(new JavadocTypeLegacyExtension());
-      }
-
-      if (s.equals("jsr303")) {
-
-        typeExtensionList.addExtension(new Jsr303Extension());
-      }
-    }
   }
 
   public GenerationConfig getJsonMapperConfig() {
     return configuration.createJsonSchemaGenerationConfig();
   }
 
-  private <T> T buildGlobalForCreate(T defaultValue) {
+  private <T> void loadBasePlugins(Set<T> plugins, Class<T> pluginType) {
 
-    if (configuration.getDefaultCreationExtension() != null) {
+    List<String> configuredPlugins = FluentIterable.from(this.typeConfiguration()).transform(new Function<String, String>() {
 
-      try {
-        return (T) configuration.getDefaultCreationExtension().newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw new GenerationException(e);
+      @Nullable
+      @Override
+      public String apply(@Nullable String s) {
+        return "ramltojaxrs." + s;
       }
+    }).toList();
+
+    for (String basePlugin : configuredPlugins) {
+      plugins.addAll(pluginManager.getClassesForName(basePlugin, Collections.<String>emptyList(), pluginType));
+    }
+  }
+
+  public ResourceClassExtension<GResource> pluginsForResourceClass(Function<Collection<ResourceClassExtension<GResource>>, ResourceClassExtension<GResource>> provider,
+                                                                   GResource resource) {
+
+    List<PluginDef> data = Annotations.RESOURCE_PLUGINS.get(Collections.<PluginDef>emptyList(), api, resource);
+    Set<ResourceClassExtension> plugins = buildPluginList(ResourceClassExtension.class, data);
+
+    // Ugly, but I don't care
+    return provider.apply(FluentIterable.from(plugins)
+        .transform(new Function<ResourceClassExtension, ResourceClassExtension<GResource>>() {
+
+          @Nullable
+          @Override
+          public ResourceClassExtension<GResource> apply(@Nullable ResourceClassExtension resourceClassExtension) {
+            return resourceClassExtension;
+          }
+        }).toList());
+  }
+
+  public ResponseClassExtension<GMethod> pluginsForResponseClass(Function<Collection<ResponseClassExtension<GMethod>>, ResponseClassExtension<GMethod>> provider,
+                                                                 GMethod method) {
+
+    List<PluginDef> data = Annotations.RESPONSE_CLASS_PLUGINS.get(Collections.<PluginDef>emptyList(), api, method);
+    Set<ResponseClassExtension> plugins = buildPluginList(ResponseClassExtension.class, data);
+
+    // Ugly, but I don't care
+    return provider.apply(FluentIterable.from(plugins)
+        .transform(new Function<ResponseClassExtension, ResponseClassExtension<GMethod>>() {
+
+          @Nullable
+          @Override
+          public ResponseClassExtension<GMethod> apply(@Nullable ResponseClassExtension resourceClassExtension) {
+            return resourceClassExtension;
+          }
+        }).toList());
+  }
+
+  public ResourceMethodExtension<GMethod> pluginsForResourceMethod(Function<Collection<ResourceMethodExtension<GMethod>>, ResourceMethodExtension<GMethod>> provider,
+                                                                   GMethod resource) {
+
+    List<PluginDef> data = Annotations.METHOD_PLUGINS.get(Collections.<PluginDef>emptyList(), api, resource);
+    Set<ResourceMethodExtension> plugins = buildPluginList(ResourceMethodExtension.class, data);
+
+    // Ugly, but I don't care
+    return provider.apply(FluentIterable.from(plugins)
+        .transform(new Function<ResourceMethodExtension, ResourceMethodExtension<GMethod>>() {
+
+          @Nullable
+          @Override
+          public ResourceMethodExtension<GMethod> apply(@Nullable ResourceMethodExtension resourceClassExtension) {
+            return resourceClassExtension;
+          }
+        }).toList());
+  }
+
+  public ResponseMethodExtension<GResponse> pluginsForResponseMethod(Function<Collection<ResponseMethodExtension<GResponse>>, ResponseMethodExtension<GResponse>> provider,
+                                                                     GResponse resource) {
+
+    List<PluginDef> data = Annotations.RESPONSE_PLUGINS.get(Collections.<PluginDef>emptyList(), api, resource);
+    Set<ResponseMethodExtension> plugins = buildPluginList(ResponseMethodExtension.class, data);
+
+    // Ugly, but I don't care
+    return provider.apply(FluentIterable.from(plugins)
+        .transform(new Function<ResponseMethodExtension, ResponseMethodExtension<GResponse>>() {
+
+          @Nullable
+          @Override
+          public ResponseMethodExtension<GResponse> apply(@Nullable ResponseMethodExtension resourceClassExtension) {
+            return resourceClassExtension;
+          }
+        }).toList());
+  }
+
+  private <T> Set<T> buildPluginList(Class<T> cls, List<PluginDef> data) {
+    Set<T> plugins = new LinkedHashSet<>();
+    loadBasePlugins(plugins, cls);
+    for (PluginDef datum : data) {
+      plugins.addAll(pluginManager.getClassesForName(datum.getPluginName(), datum.getArguments(), cls));
+    }
+    return plugins;
+  }
+
+  public <T> Iterable<T> createExtensions(String className) {
+
+    try {
+      Class c = Class.forName(className);
+      return (Iterable<T>) singletonList(c.newInstance());
+    } catch (ClassNotFoundException e) {
+
+
+      return FluentIterable.from(extensionManager.getClassesForName(className)).transform(new Function<Class, T>() {
+
+        @Nullable
+        @Override
+        public T apply(@Nullable Class input) {
+          try {
+            return (T) input.newInstance();
+          } catch (InstantiationException | IllegalAccessException e1) {
+
+            throw new GenerationException(e1);
+          }
+        }
+      });
+    } catch (IllegalAccessException | InstantiationException e) {
+      throw new GenerationException(e);
+    }
+  }
+
+  public GlobalResourceExtension withResourceListeners() {
+
+    return resourceExtensionList;
+  }
+
+  public V10GType fetchType(Resource implementation, Method method, TypeDeclaration typeDeclaration) {
+
+
+    if (typeDeclaration instanceof JSONTypeDeclaration) {
+
+      return (V10GType) ((JsonSchemaTypeGenerator) builtTypes.get(typeDeclaration.type())).getType();
+    }
+
+    if (typeDeclaration instanceof XMLTypeDeclaration) {
+
+      return (V10GType) ((XmlSchemaTypeGenerator) builtTypes.get(typeDeclaration.type())).getType();
+    }
+
+    RamlToPojo ramlToPojo = fetchRamlToPojoBuilder();
+    if (ramlToPojo.isInline(typeDeclaration)) {
+
+      TypeName typeName =
+          ramlToPojo
+              .fetchType(Names.javaTypeName(implementation, method, typeDeclaration), typeDeclaration);
+      V10RamlToPojoGType type =
+          new V10RamlToPojoGType(Names.javaTypeName(implementation, method, typeDeclaration), typeDeclaration);
+      type.setJavaType(typeName);
+      return type;
     } else {
-      return defaultValue;
+
+      TypeName typeName =
+          ramlToPojo
+              .fetchType(typeDeclaration.type(), typeDeclaration);
+      V10RamlToPojoGType type = new V10RamlToPojoGType(typeDeclaration.type(), typeDeclaration);
+      type.setJavaType(typeName);
+      return type;
     }
+
   }
 
-  private GlobalResourceExtension buildGlobalForFinish() {
+  public V10GType fetchType(Resource resource, TypeDeclaration input) {
 
-    if (configuration.getDefaultCreationExtension() != null) {
+    RamlToPojo ramlToPojo = fetchRamlToPojoBuilder();
+    if (ramlToPojo.isInline(input)) {
 
-      try {
-        return configuration.getDefaultFinishExtension().newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw new GenerationException(e);
-      }
+      TypeName typeName =
+          fetchRamlToPojoBuilder()
+              .fetchType(Names.javaTypeName(resource, input), input);
+
+      V10RamlToPojoGType type = new V10RamlToPojoGType(input);
+      type.setJavaType(typeName);
+      return type;
     } else {
-      return GlobalResourceExtension.NULL_EXTENSION;
+
+      TypeName typeName =
+          fetchRamlToPojoBuilder()
+              .fetchType(input.type(), input);
+
+      V10RamlToPojoGType type = new V10RamlToPojoGType(input);
+      type.setJavaType(typeName);
+      return type;
     }
   }
 
-  public TypeExtension getTypeExtension(
-                                        Annotations<TypeExtension> typeExtensionAnnotation, V10GType type) {
+  public V10GType fetchType(Resource resource, Method method, Response response, TypeDeclaration typeDeclaration) {
 
-    return typeExtensionAnnotation.get(getApi(), type.implementation());
-  }
+    if (typeDeclaration instanceof JSONTypeDeclaration) {
 
-  public MethodExtension getMethodExtension(
-                                            Annotations<MethodExtension> methodExtensionAnnotations, V10GType type) {
-
-    return methodExtensionAnnotations.get(getApi(), type.implementation());
-  }
-
-  public FieldExtension getFieldExtension(
-                                          Annotations<FieldExtension> fieldExtensionAnnotations, V10GType type) {
-
-    return fieldExtensionAnnotations.get(getApi(), type.implementation());
-  }
-
-
-  public ResourceMethodExtension<GMethod> getResourceMethodExtension(
-                                                                     Annotations<ResourceMethodExtension<GMethod>> onResourceMethodExtension,
-                                                                     GMethod gMethod) {
-
-    if (gMethod instanceof V10GMethod) {
-      return onResourceMethodExtension.get(getApi(), ((V10GMethod) gMethod).implementation());
+      return (V10GType) ((JsonSchemaTypeGenerator) builtTypes.get(typeDeclaration.type())).getType();
     }
 
-    return onResourceMethodExtension == Annotations.ON_METHOD_CREATION ? buildGlobalForCreate(GlobalResourceExtension.NULL_EXTENSION)
-        : buildGlobalForFinish();
-  }
+    if (typeDeclaration instanceof XMLTypeDeclaration) {
 
-  public ResourceClassExtension<GResource> getResourceClassExtension(ResourceClassExtension<GResource> defaultClass,
-                                                                     Annotations<ResourceClassExtension<GResource>> onResourceClassCreation,
-                                                                     GResource topResource) {
-    if (topResource instanceof V10GResource) {
-      List<ResourceClassExtension<GResource>> list = new ArrayList<>();
-      list.add(defaultClass);
-      list.add(onResourceClassCreation.get(getApi(), ((V10GResource) topResource).implementation()));
-
-      return new ResourceClassExtension.Composite(list);
+      return (V10GType) ((XmlSchemaTypeGenerator) builtTypes.get(typeDeclaration.type())).getType();
     }
 
-    return onResourceClassCreation == Annotations.ON_RESOURCE_CLASS_CREATION ? buildGlobalForCreate(defaultClass)
-        : buildGlobalForFinish();
-  }
 
-  public ResponseClassExtension<GMethod> getResponseClassExtension(
-                                                                   Annotations<ResponseClassExtension<GMethod>> onResponseClassCreation,
-                                                                   GMethod gMethod) {
-    if (gMethod instanceof V10GMethod) {
-      return onResponseClassCreation.get(getApi(), ((V10GMethod) gMethod).implementation());
+    RamlToPojo ramlToPojo = fetchRamlToPojoBuilder();
+    if (ramlToPojo.isInline(typeDeclaration)) {
+
+      TypeName typeName =
+          fetchRamlToPojoBuilder()
+              .fetchType(Names.javaTypeName(resource, method, response, typeDeclaration), typeDeclaration);
+
+      V10RamlToPojoGType type =
+          new V10RamlToPojoGType(Names.javaTypeName(resource, method, response, typeDeclaration), typeDeclaration);
+      type.setJavaType(typeName);
+      return type;
+    } else {
+
+      TypeName typeName =
+          fetchRamlToPojoBuilder()
+              .fetchType(typeDeclaration.type(), typeDeclaration);
+
+      V10RamlToPojoGType type = new V10RamlToPojoGType(typeDeclaration.type(), typeDeclaration);
+      type.setJavaType(typeName);
+      return type;
     }
-
-    return onResponseClassCreation == Annotations.ON_RESPONSE_CLASS_CREATION ? buildGlobalForCreate(GlobalResourceExtension.NULL_EXTENSION)
-        : buildGlobalForFinish();
   }
 
-  public ResponseMethodExtension<GResponse> getResponseMethodExtension(
-                                                                       Annotations<ResponseMethodExtension<GResponse>> onResponseMethodExtension,
-                                                                       GResponse gResponse) {
-    if (gResponse instanceof V10GResponse) {
-      return onResponseMethodExtension.get(getApi(), ((V10GResponse) gResponse).implementation());
-    }
+  public V10GType fetchType(String name, TypeDeclaration typeDeclaration) {
+    TypeName typeName =
+        fetchRamlToPojoBuilder()
+            .fetchType(name, typeDeclaration);
 
-    return onResponseMethodExtension == Annotations.ON_RESPONSE_METHOD_CREATION ? buildGlobalForCreate(GlobalResourceExtension.NULL_EXTENSION)
-        : buildGlobalForFinish();
+    V10RamlToPojoGType type = new V10RamlToPojoGType(typeDeclaration);
+    type.setJavaType(typeName);
+    return type;
   }
 
-
-  public void internalClass(JavaPoetTypeGenerator simpleTypeGenerator, JavaPoetTypeGenerator internalGenerator) {
-
-    internalTypesPerClass.put(simpleTypeGenerator, internalGenerator);
+  public boolean shouldCopySchemas() {
+    return configuration.getCopySchemas();
   }
 }

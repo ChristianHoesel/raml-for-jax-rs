@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,7 @@
  */
 package server.humanity;
 
-import example.model.ArmImpl;
-import example.model.CorpseImpl;
-import example.model.Gender;
-import example.model.Human;
-import example.model.Limb;
-import example.model.Person;
-import example.model.PersonImpl;
+import example.model.*;
 import example.types.Humans;
 
 import java.util.ArrayList;
@@ -38,7 +32,7 @@ public class HumanityImpl implements Humans {
   public GetHumansResponse getHumans(String type) {
     List<Human> humans = new ArrayList<>();
     PersonImpl pi = new PersonImpl();
-    pi.setGender(Gender.FEMALE);
+    pi.setActualGender(Gender.FEMALE);
     pi.setWeight(180);
 
     pi.setDateOfBirth(new Date());
@@ -51,16 +45,17 @@ public class HumanityImpl implements Humans {
     CorpseImpl ci = new CorpseImpl();
     ci.setDateOfDeath(new Date());
     pi.setSiblings(Collections.<Human>singletonList(ci));
-    pi.setLimbs(new Limb(new ArmImpl()));
+    pi.setLimbs(new LimbImpl(new ArmImpl()));
 
     CorpseImpl another = new CorpseImpl();
-    another.setGender(Gender.OTHER);
+    another.setActualGender(Gender.OTHER);
     another.setDateOfDeath(new Date());
 
     humans.add(pi);
     humans.add(another);
 
-    return GetHumansResponse.respond200WithApplicationJson(humans);
+    return GetHumansResponse.respond200WithApplicationJson(humans,
+                                                           GetHumansResponse.headersFor200().withBoo("MyBoo"));
   }
 
   @Override
@@ -68,7 +63,7 @@ public class HumanityImpl implements Humans {
     if ("person".equals(type)) {
 
       PersonImpl pi = new PersonImpl();
-      pi.setGender(Gender.FEMALE);
+      pi.setActualGender(Gender.FEMALE);
       pi.setWeight(180);
 
       pi.setDateOfBirth(new Date());
@@ -81,19 +76,40 @@ public class HumanityImpl implements Humans {
       CorpseImpl ci = new CorpseImpl();
       ci.setDateOfDeath(new Date());
       pi.setSiblings(Collections.<Human>singletonList(ci));
-      pi.setLimbs(new Limb(new ArmImpl()));
+      pi.setLimbs(new LimbImpl(new ArmImpl()));
       return GetHumansByIdResponse.respond200WithApplicationJson(pi);
     } else {
 
       CorpseImpl ci = new CorpseImpl();
-      ci.setGender(Gender.OTHER);
+      ci.setActualGender(Gender.OTHER);
       ci.setDateOfDeath(new Date());
       return GetHumansByIdResponse.respond200WithApplicationJson(ci);
     }
   }
 
   @Override
+  public GetHumansPersonByIdResponse getHumansPersonById(String id, String type) {
+    PersonImpl pi = new PersonImpl();
+    pi.setActualGender(Gender.FEMALE);
+    pi.setWeight(180);
+
+    pi.setDateOfBirth(new Date());
+    pi.setInstantOfBirth(new Date());
+    pi.setTimeOfArrival(new Date());
+    pi.setDateOfBirth(new Date());
+    pi.setTimeOfBirth(new Date());
+    pi.setRequestTime(new Date());
+
+    CorpseImpl ci = new CorpseImpl();
+    ci.setDateOfDeath(new Date());
+    pi.setSiblings(Collections.<Human>singletonList(ci));
+    pi.setLimbs(new LimbImpl(new ArmImpl()));
+    return GetHumansPersonByIdResponse.respond200WithApplicationJson(pi);
+  }
+
+  @Override
   public PutHumansByIdResponse putHumansById(String id, Human entity) {
-    return null;
+
+    return PutHumansByIdResponse.respond200(PutHumansByIdResponse.headersFor200().withSomeOtherHeader("Blah"));
   }
 }

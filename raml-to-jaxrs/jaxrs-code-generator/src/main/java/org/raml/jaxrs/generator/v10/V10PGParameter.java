@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,7 @@ package org.raml.jaxrs.generator.v10;
 
 import org.raml.jaxrs.generator.ramltypes.GParameter;
 import org.raml.jaxrs.generator.ramltypes.GType;
-import org.raml.v2.api.model.v10.datamodel.JSONTypeDeclaration;
-import org.raml.v2.api.model.v10.datamodel.ObjectTypeDeclaration;
 import org.raml.v2.api.model.v10.datamodel.TypeDeclaration;
-import org.raml.v2.api.model.v10.datamodel.XMLTypeDeclaration;
 
 /**
  * Created by Jean-Philippe Belanger on 12/10/16. Just potential zeroes and ones
@@ -30,21 +27,20 @@ class V10PGParameter implements GParameter {
   private final TypeDeclaration input;
   private final V10GType type;
 
-  public V10PGParameter(V10TypeRegistry registry, TypeDeclaration input) {
+  public V10PGParameter(TypeDeclaration input, V10GType type) {
 
     this.input = input;
-    this.type = registry.fetchType(input.type(), input);
+    this.type = type;
+  }
+
+  @Override
+  public String defaultValue() {
+    return input.defaultValue();
   }
 
   @Override
   public String name() {
     return input.name();
-  }
-
-  @Override
-  public boolean isComposite() {
-    return input instanceof ObjectTypeDeclaration || input instanceof XMLTypeDeclaration
-        || input instanceof JSONTypeDeclaration;
   }
 
   @Override
@@ -58,4 +54,5 @@ class V10PGParameter implements GParameter {
 
     return input;
   }
+
 }

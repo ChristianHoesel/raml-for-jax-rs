@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,23 +19,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
-import org.raml.jaxrs.model.JaxRsEntity;
-import org.raml.jaxrs.model.JaxRsFormParameter;
-import org.raml.jaxrs.model.JaxRsHeaderParameter;
-import org.raml.jaxrs.model.JaxRsMultiPartFormDataParameter;
-import org.raml.jaxrs.model.JaxRsQueryParameter;
-import org.raml.jaxrs.model.JaxRsSupportedAnnotation;
+import org.raml.jaxrs.model.*;
 import org.raml.jaxrs.parser.source.SourceParser;
 
 import javax.annotation.Nullable;
-import java.lang.annotation.Annotation;
-import java.util.List;
-import java.util.Set;
 
 class Utilities {
 
@@ -106,14 +97,15 @@ class Utilities {
   }
 
   public static FluentIterable<JaxRsQueryParameter> toJaxRsQueryParameters(
-                                                                           Iterable<Parameter> parameters) {
+                                                                           Iterable<Parameter> parameters,
+                                                                           final SourceParser sourceParser) {
     return FluentIterable.from(parameters).transform(
                                                      new Function<Parameter, JaxRsQueryParameter>() {
 
                                                        @Nullable
                                                        @Override
                                                        public JaxRsQueryParameter apply(@Nullable Parameter parameter) {
-                                                         return JerseyJaxRsQueryParameter.create(parameter);
+                                                         return JerseyJaxRsQueryParameter.create(parameter, sourceParser);
                                                        }
                                                      });
   }
@@ -141,14 +133,15 @@ class Utilities {
   }
 
   public static FluentIterable<JaxRsHeaderParameter> toJaxRsHeaderParameters(
-                                                                             Iterable<Parameter> headerParameters) {
+                                                                             Iterable<Parameter> headerParameters,
+                                                                             final SourceParser sourceParser) {
     return FluentIterable.from(headerParameters).transform(
                                                            new Function<Parameter, JaxRsHeaderParameter>() {
 
                                                              @Nullable
                                                              @Override
                                                              public JaxRsHeaderParameter apply(@Nullable Parameter parameter) {
-                                                               return JerseyJaxRsHeaderParameter.create(parameter);
+                                                               return JerseyJaxRsHeaderParameter.create(parameter, sourceParser);
                                                              }
                                                            });
   }

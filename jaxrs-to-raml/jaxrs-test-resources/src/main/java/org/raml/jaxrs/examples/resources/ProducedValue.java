@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@ package org.raml.jaxrs.examples.resources;
 
 import org.raml.jaxrs.common.Example;
 import org.raml.jaxrs.common.ExampleCases;
-import org.raml.jaxrs.handlers.SimpleJaxbTypes;
-import org.raml.jaxrs.common.RamlGenerator;
+import org.raml.pojotoraml.plugins.RamlGenerator;
+import org.raml.jaxrs.handlers.SimpleJaxbClassParser;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -28,7 +28,7 @@ import java.util.List;
  * Created by Jean-Philippe Belanger on 3/26/17. Just potential zeroes and ones
  */
 @XmlRootElement
-@RamlGenerator(SimpleJaxbTypes.class)
+@RamlGenerator(parser = SimpleJaxbClassParser.class)
 @ExampleCases({"one", "two"})
 public class ProducedValue {
 

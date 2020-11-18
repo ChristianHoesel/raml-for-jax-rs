@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import com.squareup.javapoet.TypeName;
 import org.raml.jaxrs.generator.CurrentBuild;
 import org.raml.jaxrs.generator.GObjectType;
 import org.raml.jaxrs.generator.SchemaTypeFactory;
-import org.raml.jaxrs.generator.v10.TypeUtils;
+import org.raml.jaxrs.generator.v10.CreationModel;
 import org.raml.v2.api.model.v10.datamodel.JSONTypeDeclaration;
 import org.raml.v2.api.model.v10.datamodel.TypeDeclaration;
 
@@ -34,8 +34,8 @@ public class V10GTypeJson extends V10GTypeHelper {
   private final String defaultJavatypeName;
   private TypeName modelSpecifiedJavaType;
 
-  V10GTypeJson(JSONTypeDeclaration typeDeclaration, String realName, String defaultJavatypeName) {
-    super(realName);
+  V10GTypeJson(JSONTypeDeclaration typeDeclaration, String realName, String defaultJavatypeName, CreationModel model) {
+    super(realName, typeDeclaration, model);
     this.typeDeclaration = typeDeclaration;
     this.name = realName;
     this.defaultJavatypeName = defaultJavatypeName;
@@ -83,16 +83,6 @@ public class V10GTypeJson extends V10GTypeHelper {
     } else {
       return ClassName.get(pack, defaultJavatypeName);
     }
-  }
-
-  public ClassName javaImplementationName(String pack) {
-
-    return null;
-  }
-
-  public boolean isInline() {
-    return TypeUtils.shouldCreateNewClass(typeDeclaration,
-                                          typeDeclaration.parentTypes().toArray(new TypeDeclaration[0]));
   }
 
   @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,24 +15,18 @@
  */
 package org.raml.jaxrs.parser;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
 import org.raml.jaxrs.model.JaxRsApplication;
-import org.raml.jaxrs.model.JaxRsSupportedAnnotation;
 import org.raml.jaxrs.parser.analyzers.Analyzers;
 import org.raml.jaxrs.parser.gatherers.JerseyGatherer;
-import org.raml.jaxrs.parser.model.JerseyJaxRsSupportedAnnotation;
 import org.raml.jaxrs.parser.source.SourceParser;
 import org.raml.jaxrs.parser.util.ClassLoaderUtils;
 import org.raml.utilities.format.Joiners;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -45,21 +39,23 @@ class JerseyJaxRsParser implements JaxRsParser {
   private final Path jaxRsResource;
   private final SourceParser sourceParser;
   private final Set<Class<? extends Annotation>> translatedAnnotations;
+  private final String topPackage;
 
 
   private JerseyJaxRsParser(Path jaxRsResource, SourceParser sourceParser,
-                            Set<Class<? extends Annotation>> translatedAnnotations) {
+                            Set<Class<? extends Annotation>> translatedAnnotations, String topPackage) {
     this.jaxRsResource = jaxRsResource;
     this.sourceParser = sourceParser;
     this.translatedAnnotations = translatedAnnotations;
+    this.topPackage = topPackage;
   }
 
   public static JerseyJaxRsParser create(Path classesPath, SourceParser sourceParser,
-                                         Set<Class<? extends Annotation>> translatedAnnotations) {
+                                         Set<Class<? extends Annotation>> translatedAnnotations, String topPackage) {
     checkNotNull(classesPath);
     checkNotNull(sourceParser);
 
-    return new JerseyJaxRsParser(classesPath, sourceParser, translatedAnnotations);
+    return new JerseyJaxRsParser(classesPath, sourceParser, translatedAnnotations, topPackage);
   }
 
   @Override
@@ -68,7 +64,8 @@ class JerseyJaxRsParser implements JaxRsParser {
 
     Iterable<Class<?>> classes = getJaxRsClassesFor(jaxRsResource);
 
-    return Analyzers.jerseyAnalyzerFor(classes, sourceParser, Utilities.getSupportedAnnotations(translatedAnnotations)).analyze();
+    return Analyzers.jerseyAnalyzerFor(classes, sourceParser, Utilities.getSupportedAnnotations(translatedAnnotations),
+                                       topPackage).analyze();
   }
 
   private static Iterable<Class<?>> getJaxRsClassesFor(Path jaxRsResource)

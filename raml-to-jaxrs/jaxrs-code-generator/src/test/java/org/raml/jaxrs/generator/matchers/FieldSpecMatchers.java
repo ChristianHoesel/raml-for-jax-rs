@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.raml.jaxrs.generator.matchers;
 
 import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
@@ -33,6 +32,17 @@ public class FieldSpecMatchers {
       @Override
       protected String featureValueOf(FieldSpec actual) {
         return actual.name;
+      }
+    };
+  }
+
+  public static Matcher<FieldSpec> initializer(Matcher<String> match) {
+
+    return new FeatureMatcher<FieldSpec, String>(match, "field initializer", "field initializer") {
+
+      @Override
+      protected String featureValueOf(FieldSpec actual) {
+        return actual.initializer.toString();
       }
     };
   }

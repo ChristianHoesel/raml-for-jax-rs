@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.raml.jaxrs.parser.analyzers;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.raml.jaxrs.model.JaxRsApplication;
@@ -45,22 +44,24 @@ class JerseyAnalyzer implements Analyzer {
   private final JerseyBridge jerseyBridge;
   private final SourceParser sourceParser;
   private final Set<JaxRsSupportedAnnotation> supportedAnnotations;
+  private final String topPackage;
 
   private JerseyAnalyzer(ImmutableSet<Class<?>> jaxRsClasses, JerseyBridge jerseyBridge,
-                         SourceParser sourceParser, Set<JaxRsSupportedAnnotation> supportedAnnotations) {
+                         SourceParser sourceParser, Set<JaxRsSupportedAnnotation> supportedAnnotations, String topPackage) {
     this.jaxRsClasses = jaxRsClasses;
     this.jerseyBridge = jerseyBridge;
     this.sourceParser = sourceParser;
     this.supportedAnnotations = supportedAnnotations;
+    this.topPackage = topPackage;
   }
 
   static JerseyAnalyzer create(Iterable<Class<?>> classes, JerseyBridge jerseyBridge,
-                               SourceParser sourceParser, Set<JaxRsSupportedAnnotation> supportedAnnotations) {
+                               SourceParser sourceParser, Set<JaxRsSupportedAnnotation> supportedAnnotations, String topPackage) {
     checkNotNull(classes);
     checkNotNull(jerseyBridge);
     checkNotNull(sourceParser);
 
-    return new JerseyAnalyzer(ImmutableSet.copyOf(classes), jerseyBridge, sourceParser, supportedAnnotations);
+    return new JerseyAnalyzer(ImmutableSet.copyOf(classes), jerseyBridge, sourceParser, supportedAnnotations, topPackage);
   }
 
   @Override
@@ -84,6 +85,6 @@ class JerseyAnalyzer implements Analyzer {
                    Joiners.squareBracketsPerLineJoiner().join(runtimeResources));
     }
 
-    return JerseyJaxRsApplication.fromRuntimeResources(runtimeResources, sourceParser, supportedAnnotations);
+    return JerseyJaxRsApplication.fromRuntimeResources(runtimeResources, sourceParser, supportedAnnotations, topPackage);
   }
 }

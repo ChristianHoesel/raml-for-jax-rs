@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.raml.jaxrs.model;
 import com.google.common.base.Optional;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 
 public interface JaxRsHeaderParameter {
 
@@ -26,7 +25,7 @@ public interface JaxRsHeaderParameter {
 
   Optional<String> getDefaultValue();
 
-  Type getType();
+  Optional<JaxRsEntity> getEntity();
 
   <T extends Annotation> Optional<T> getAnnotation(Class<T> annotationType);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,11 @@ public class V08GParameter implements GParameter {
   }
 
   @Override
+  public String defaultValue() {
+    return input.defaultValue();
+  }
+
+  @Override
   public Parameter implementation() {
     return input;
   }
@@ -44,12 +49,8 @@ public class V08GParameter implements GParameter {
   }
 
   @Override
-  public boolean isComposite() {
-    return false;
-  }
-
-  @Override
   public GType type() {
     return type;
   }
+
 }

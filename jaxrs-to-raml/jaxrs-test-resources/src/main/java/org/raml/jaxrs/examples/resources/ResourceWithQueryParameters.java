@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.xml.ws.Response;
+import javax.ws.rs.*;
 
 @Path("/left/right/left")
 public class ResourceWithQueryParameters {
@@ -38,7 +32,9 @@ public class ResourceWithQueryParameters {
                                         @NotNull @QueryParam("version") String version,
                                         @DefaultValue("military") @QueryParam("typeOfStep") String typeOfStep,
                                         @DefaultValue("jack") @Size(min = 8, max = 32) @QueryParam("captainName") String theName,
-                                        @QueryParam("ageOfCaptain") @Min(25) @Max(100) int captainAge, String foo) {
+                                        @QueryParam("ageOfCaptain") @Min(25) @Max(100) int captainAge,
+                                        @QueryParam("genderOfCaptain") Gender genderOfCaptain,
+                                        String foo) {
     return null;
   }
 }

@@ -5,12 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.raml</groupId>
+        <groupId>org.raml.jaxrs</groupId>
         <artifactId>jaxrs-to-raml-maven-examples</artifactId>
-        <version>2.0.1-SNAPSHOT</version>
+        <version>3.0.6-SNAPSHOT</version>
     </parent>
 
     <artifactId>jaxrs-to-raml-raml-examples</artifactId>
+
     <dependencies>
         <dependency>
             <groupId>javax.ws.rs</groupId>
@@ -19,7 +20,6 @@
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-multipart</artifactId>
-            <version>2.24</version>
         </dependency>
         <dependency>
             <groupId>javax.validation</groupId>
@@ -27,11 +27,11 @@
             <version>1.1.0.Final</version>
         </dependency>
         <dependency>
-            <groupId>org.raml</groupId>
+            <groupId>org.raml.jaxrs</groupId>
             <artifactId>raml-generator-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.raml</groupId>
+            <groupId>org.raml.jaxrs</groupId>
             <artifactId>raml-emitter</artifactId>
         </dependency>
         <dependency>
@@ -43,7 +43,7 @@
             <artifactId>raml-parser-2</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.raml</groupId>
+            <groupId>org.raml.jaxrs</groupId>
             <artifactId>jaxrs-to-raml-cli</artifactId>
         </dependency>
     </dependencies>
@@ -51,11 +51,11 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.raml</groupId>
+                <groupId>org.raml.jaxrs</groupId>
                 <artifactId>jaxrs-to-raml-maven-plugin</artifactId>
                 <dependencies>
                     <dependency>
-                        <groupId>org.raml</groupId>
+                        <groupId>org.raml.jaxrs</groupId>
                         <artifactId>jaxrs-to-raml-methods</artifactId>
                         <version>${project.version}</version>
                     </dependency>
@@ -76,6 +76,4 @@
             </plugin>
         </plugins>
     </build>
-
-    
 </project>

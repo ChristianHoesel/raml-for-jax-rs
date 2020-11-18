@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,14 @@ package org.raml.jaxrs.generator;
 
 import org.raml.jaxrs.generator.v08.V08Finder;
 import org.raml.jaxrs.generator.v08.V08TypeRegistry;
+import org.raml.jaxrs.generator.v10.ExtensionManager;
 import org.raml.jaxrs.generator.v10.ResourceHandler;
 import org.raml.jaxrs.generator.v10.V10Finder;
-import org.raml.jaxrs.generator.v10.V10TypeRegistry;
 import org.raml.v2.api.RamlModelBuilder;
 import org.raml.v2.api.RamlModelResult;
 import org.raml.v2.api.model.v10.resources.Resource;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
+import java.io.*;
 
 
 /**
@@ -45,72 +40,68 @@ public class RamlScanner {
   }
 
 
-  public void handle(String resourceName) throws IOException, GenerationException {
-
-    handle(RamlScanner.class.getResource(resourceName));
-  }
-
   public void handle(File resource) throws IOException, GenerationException {
 
-    handle(new FileInputStream(resource), resource.getAbsoluteFile().getParentFile().getAbsolutePath() + "/");
+    handle(new FileInputStream(resource), resource.getAbsoluteFile().getParentFile());
   }
 
-  public void handle(URL resourceName) throws IOException, GenerationException {
-
-    handle(resourceName.openStream(), ".");
-  }
-
-  public void handle(InputStream stream, String directory) throws GenerationException, IOException {
+  public void handle(InputStream stream, File ramlDirectory) throws GenerationException, IOException {
 
     RamlModelResult result =
-        new RamlModelBuilder().buildApi(new InputStreamReader(stream), directory);
+        new RamlModelBuilder().buildApi(new InputStreamReader(stream), ramlDirectory.getAbsolutePath() + "/");
     if (result.hasErrors()) {
       throw new GenerationException(result.getValidationResults());
     }
 
-    if (result.isVersion08()) {
-      handle(result.getApiV08());
+    if (result.isVersion08() && result.getApiV08() != null) {
+      handleRamlFile(result.getApiV08(), ramlDirectory);
+      return;
+    }
+
+    if (result.isVersion10() && result.getApiV10() != null) {
+      handleRamlFile(result.getApiV10(), ramlDirectory);
     } else {
-      handle(result.getApiV10());
+      throw new GenerationException("RAML file is neither v10 nor v08 api file");
     }
   }
 
-  public void handle(org.raml.v2.api.model.v10.api.Api api) throws IOException {
+  public void handleRamlFile(org.raml.v2.api.model.v10.api.Api api, File ramlDirectory) throws IOException {
 
-    V10TypeRegistry registry = new V10TypeRegistry();
-    CurrentBuild build = new CurrentBuild(new V10Finder(api, registry), api);
+    CurrentBuild build =
+        new CurrentBuild(api, ExtensionManager.createExtensionManager(), ramlDirectory);
+
     configuration.setupBuild(build);
-    build.constructClasses();
+    build.constructClasses(new V10Finder(build, api));
 
     ResourceHandler resourceHandler = new ResourceHandler(build);
 
 
     // handle resources.
     for (Resource resource : api.resources()) {
-      resourceHandler.handle(registry, resource);
+      resourceHandler.handle(resource);
     }
-
 
     build.generate(configuration.getOutputDirectory());
   }
 
 
-  public void handle(org.raml.v2.api.model.v08.api.Api api) throws IOException {
+  public void handleRamlFile(org.raml.v2.api.model.v08.api.Api api, File ramlDirectory) throws IOException {
 
     GAbstractionFactory factory = new GAbstractionFactory();
     V08TypeRegistry registry = new V08TypeRegistry();
     V08Finder typeFinder = new V08Finder(api, factory, registry);
-    CurrentBuild build = new CurrentBuild(typeFinder, null);
+    CurrentBuild build = new CurrentBuild(null, ExtensionManager.createExtensionManager(), ramlDirectory);
+
     configuration.setupBuild(build);
 
-    build.constructClasses();
+    build.constructClasses(typeFinder);
 
     ResourceHandler resourceHandler = new ResourceHandler(build);
 
 
     // handle resources.
     for (org.raml.v2.api.model.v08.resources.Resource resource : api.resources()) {
-      resourceHandler.handle(typeFinder.globalSchemas(), registry, resource);
+      resourceHandler.handle(typeFinder.globalSchemas().keySet(), registry, resource);
     }
 
     build.generate(configuration.getOutputDirectory());

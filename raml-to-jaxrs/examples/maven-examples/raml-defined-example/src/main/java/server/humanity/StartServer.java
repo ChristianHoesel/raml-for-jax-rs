@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,8 @@ public class StartServer {
   public static void main(String[] args) throws Exception {
 
     URI baseUri = UriBuilder.fromUri("http://localhost/").port(9998).build();
-    ResourceConfig config = new ResourceConfig(HumanityImpl.class);
+    ResourceConfig config = new ResourceConfig(HumanityImpl.class, ComplexHumanityImpl.class);
+    config.register(HumanIdConverterProvider.class);
     Server server = JettyHttpContainerFactory.createServer(baseUri, config);
     server.start();
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,8 @@ public class OneStopShop {
             : SourceParsers.nullParser();
 
     JaxRsApplication application =
-        JaxRsParsers.usingJerseyWith(jaxRsUrl, sourceParser, ramlConfiguration.getTranslatedAnnotations()).parse();
+        JaxRsParsers.usingJerseyWith(jaxRsUrl, sourceParser, ramlConfiguration.getTranslatedAnnotations(),
+                                     ramlConfiguration.getTopPackage()).parse();
 
     RamlApi ramlApi = JaxRsToRamlConverter.create().convert(ramlConfiguration, application);
 

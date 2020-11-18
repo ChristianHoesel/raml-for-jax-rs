@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,8 @@
 package org.raml.jaxrs.cli;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
 import org.raml.jaxrs.converter.RamlConfiguration;
 import org.raml.jaxrs.raml.core.DefaultRamlConfiguration;
 import org.raml.jaxrs.raml.core.OneStopShop;
@@ -43,8 +36,10 @@ public class Main {
     Options options = new Options();
     options.addOption(Option.builder("a").required().longOpt("applicationDirectory").hasArg().desc("application path").build());
     options.addOption(Option.builder("o").required().longOpt("output").hasArg().desc("RAML output file").build());
+
     options.addOption("s", "sourceRoot", true, "JaxRs source root");
     options.addOption("t", "translatedAnnotations", true, "translated annotation list (comma separated");
+    options.addOption("p", "topPackage", true, "top package used for resources");
 
     try {
 
@@ -60,10 +55,16 @@ public class Main {
         jaxRsSourceRoot = Paths.get(command.getOptionValue('s'));
       }
 
+      String topPackage = null;
+      if (command.hasOption('p')) {
+
+        topPackage = command.getOptionValue('p');
+      }
+
 
       RamlConfiguration ramlConfiguration =
           DefaultRamlConfiguration.forApplication(jaxRsResourceFile.getFileName().toString(),
-                                                  Collections.<Class<? extends Annotation>>emptySet());
+                                                  Collections.<Class<? extends Annotation>>emptySet(), topPackage);
 
       OneStopShop.Builder builder =
           OneStopShop.builder().withJaxRsClassesRoot(jaxRsResourceFile)

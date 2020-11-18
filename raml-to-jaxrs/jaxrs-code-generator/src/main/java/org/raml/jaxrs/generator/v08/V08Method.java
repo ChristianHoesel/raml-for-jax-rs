@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,7 @@ package org.raml.jaxrs.generator.v08;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import org.raml.jaxrs.generator.ramltypes.GMethod;
-import org.raml.jaxrs.generator.ramltypes.GParameter;
-import org.raml.jaxrs.generator.ramltypes.GRequest;
-import org.raml.jaxrs.generator.ramltypes.GResource;
-import org.raml.jaxrs.generator.ramltypes.GResponse;
+import org.raml.jaxrs.generator.ramltypes.*;
 import org.raml.v2.api.model.v08.bodies.BodyLike;
 import org.raml.v2.api.model.v08.bodies.Response;
 import org.raml.v2.api.model.v08.methods.Method;
@@ -40,6 +36,8 @@ public class V08Method implements GMethod {
   private final List<GParameter> queryParameters;
   private final List<GResponse> responses;
   private final Method input;
+  private final List<GParameter> headers;
+
   private List<GRequest> requests;
 
   public V08Method(final V08GResource v08GResource, final Method input,
@@ -55,6 +53,17 @@ public class V08Method implements GMethod {
             return new V08GParameter(input);
           }
         });
+
+    this.headers =
+        Lists.transform(input.headers(), new Function<Parameter, GParameter>() {
+
+          @Nullable
+          @Override
+          public GParameter apply(@Nullable Parameter input) {
+            return new V08GParameter(input);
+          }
+        });
+
     this.requests = Lists.transform(input.body(), new Function<BodyLike, GRequest>() {
 
       @Nullable
@@ -105,6 +114,17 @@ public class V08Method implements GMethod {
   @Override
   public List<GResponse> responses() {
     return responses;
+  }
+
+  @Override
+  public String getDescription() {
+    return input.description() != null ? input.description().value() : null;
+  }
+
+
+  @Override
+  public List<GParameter> headers() {
+    return headers;
   }
 
   @Override

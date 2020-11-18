@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,21 @@
  */
 package org.raml.jaxrs.generator;
 
+import com.google.common.io.Files;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import com.sun.codemodel.JCodeModel;
-import org.jsonschema2pojo.GenerationConfig;
-import org.jsonschema2pojo.Jackson2Annotator;
-import org.jsonschema2pojo.SchemaGenerator;
-import org.jsonschema2pojo.SchemaMapper;
-import org.jsonschema2pojo.SchemaStore;
+import org.jsonschema2pojo.*;
 import org.jsonschema2pojo.rules.RuleFactory;
 import org.raml.jaxrs.generator.builders.AbstractTypeGenerator;
+import org.raml.jaxrs.generator.builders.BuildPhase;
 import org.raml.jaxrs.generator.builders.CodeContainer;
 import org.raml.jaxrs.generator.builders.CodeModelTypeGenerator;
-import org.raml.jaxrs.generator.builders.BuildPhase;
+import org.raml.jaxrs.generator.ramltypes.GType;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 /**
  * Created by Jean-Philippe Belanger on 11/20/16. Just potential zeroes and ones
@@ -38,12 +38,14 @@ public class JsonSchemaTypeGenerator extends AbstractTypeGenerator<JCodeModel> i
 
   private final CurrentBuild build;
   private final String pack;
+  private final GType type;
   private final ClassName name;
   private final String schema;
 
-  public JsonSchemaTypeGenerator(CurrentBuild build, String pack, ClassName name, String schema) {
+  public JsonSchemaTypeGenerator(CurrentBuild build, String pack, GType type, ClassName name, String schema) {
     this.build = build;
     this.pack = pack;
+    this.type = type;
     this.name = name;
     this.schema = schema;
   }
@@ -52,17 +54,33 @@ public class JsonSchemaTypeGenerator extends AbstractTypeGenerator<JCodeModel> i
   public void output(CodeContainer<JCodeModel> container, BuildPhase buildPhase) throws IOException {
 
     GenerationConfig config = build.getJsonMapperConfig();
-    final SchemaMapper mapper = new SchemaMapper(new RuleFactory(config, new Jackson2Annotator(), new SchemaStore()),
+    Jackson2Annotator annotator = new Jackson2Annotator(config);
+    Class<? extends Annotator> annotatorClass = config.getCustomAnnotator();
+    if (Jackson2Annotator.class.isAssignableFrom(annotatorClass)) {
+      try {
+        annotator = (Jackson2Annotator) annotatorClass.getConstructor(GenerationConfig.class).newInstance(config);
+      } catch (Exception err) {
+        throw new IOException(err);
+      }
+    }
+    final SchemaMapper mapper = new SchemaMapper(new RuleFactory(config, annotator, new SchemaStore()),
                                                  new SchemaGenerator());
     final JCodeModel codeModel = new JCodeModel();
 
+    File schemaFile = File.createTempFile("schema", "json", build.getSchemaRepository());
+    Files.write(schema, schemaFile, Charset.defaultCharset());
     try {
-      mapper.generate(codeModel, name.simpleName(), pack, schema);
+
+      mapper.generate(codeModel, name.simpleName(), pack, schemaFile.toURL());
     } catch (IOException e) {
       throw new GenerationException(e);
     }
 
     container.into(codeModel);
+  }
+
+  public GType getType() {
+    return type;
   }
 
   @Override

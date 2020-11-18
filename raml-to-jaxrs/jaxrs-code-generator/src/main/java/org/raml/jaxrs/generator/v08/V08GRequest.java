@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,12 @@ public class V08GRequest implements GRequest {
   public V08GRequest(V08GResource v08GResource, V08Method v08Method, BodyLike input,
                      Set<String> globalSchemas, V08TypeRegistry registry) {
     this.input = input;
+    if (input.schema() == null) {
+
+      type = null;
+      return;
+    }
+
     if (globalSchemas.contains(input.schema().value())) {
 
       V08GType t = registry.fetchType(input.schema().value());

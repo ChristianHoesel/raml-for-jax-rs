@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.NoSuchElementException;
-
-import static java.lang.String.format;
 
 /**
  * An enum representing valid possible http verbs.

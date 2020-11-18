@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,10 @@ package org.raml.jaxrs.parser.util;
 
 import com.google.common.collect.FluentIterable;
 
-import org.omg.PortableServer.THREAD_POLICY_ID;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.util.concurrent.Callable;
 
 public class ClassLoaderUtils {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 package org.raml.jaxrs.generator.builders.extensions.resources;
 
 import com.squareup.javapoet.TypeSpec;
-import org.raml.jaxrs.generator.extension.resources.ResourceContext;
-import org.raml.jaxrs.generator.extension.resources.ResponseClassExtension;
+import org.raml.jaxrs.generator.extension.resources.api.ResourceContext;
+import org.raml.jaxrs.generator.extension.resources.api.ResponseClassExtension;
 import org.raml.jaxrs.generator.ramltypes.GMethod;
 
 /**
@@ -26,7 +26,7 @@ import org.raml.jaxrs.generator.ramltypes.GMethod;
 public class TrialResponseClassExtension implements ResponseClassExtension<GMethod> {
 
   @Override
-  public TypeSpec.Builder onMethod(ResourceContext context, GMethod response, TypeSpec.Builder typeSpec) {
+  public TypeSpec.Builder onResponseClass(ResourceContext context, GMethod response, TypeSpec.Builder typeSpec) {
 
     return typeSpec;
   }

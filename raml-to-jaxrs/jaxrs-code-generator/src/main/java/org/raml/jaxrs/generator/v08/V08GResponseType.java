@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,27 +36,31 @@ public class V08GResponseType implements GResponseType {
                           Set<String> globalSchemas, V08TypeRegistry registry) {
     this.input = input;
 
-    if (globalSchemas.contains(input.schema().value())) {
+    if (input.schema() != null) {
+      if (globalSchemas.contains(input.schema().value())) {
 
-      V08GType t = registry.fetchType(input.schema().value());
-      if (t == null) {
-        this.type = new V08GType(input.schema().value());
-        registry.addType(type);
+        V08GType t = registry.fetchType(input.schema().value());
+        if (t == null) {
+          this.type = new V08GType(input.schema().value());
+          registry.addType(type);
+        } else {
+          this.type = t;
+        }
       } else {
-        this.type = t;
+        // lets be stupid.
+
+        V08GType t = new V08GType(resource, method, response, input);
+        V08GType check = registry.fetchType(t.name());
+        if (check != null) {
+
+          this.type = check;
+        } else {
+          this.type = t;
+          registry.addType(t);
+        }
       }
     } else {
-      // lets be stupid.
-
-      V08GType t = new V08GType(resource, method, response, input);
-      V08GType check = registry.fetchType(t.name());
-      if (check != null) {
-
-        this.type = check;
-      } else {
-        this.type = t;
-        registry.addType(t);
-      }
+      type = null;
     }
   }
 

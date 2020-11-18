@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,28 +17,31 @@ package org.raml.jaxrs.examples.resources;
 
 import org.raml.jaxrs.common.Example;
 import org.raml.jaxrs.common.Examples;
-import org.raml.jaxrs.handlers.BeanLikeTypes;
-import org.raml.jaxrs.common.RamlGenerator;
+import org.raml.pojotoraml.plugins.RamlGenerator;
+import org.raml.pojotoraml.plugins.RamlGeneratorPlugin;
 import org.raml.jaxrs.examples.Secure;
+import org.raml.jaxrs.handlers.BeanLikeClassParser;
 
-import javax.ws.rs.Path;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
-
-import static org.raml.v2.api.model.v10.declarations.AnnotationTarget.Example;
+import java.util.UUID;
 
 /**
  * Created by Jean-Philippe Belanger on 3/26/17. Just potential zeroes and ones
  */
 @XmlRootElement
-@RamlGenerator(BeanLikeTypes.class)
 @Secure(security = String.class, level = 17)
+@RamlGenerator(
+    parser = BeanLikeClassParser.class,
+    plugins = {@RamlGeneratorPlugin(plugin = "core.changeTypeName", parameters = {"MyValue"})})
 public interface HierarchyValue extends TopValue, AnotherTopValue {
 
   @Examples({
       @Example("qqchose"),
       @Example("qqchose d'autre")
   })
+  UUID getUUID();
+
   String getName();
 
   int getId();

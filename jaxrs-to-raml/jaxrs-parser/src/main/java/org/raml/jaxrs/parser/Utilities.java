@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import org.raml.jaxrs.parser.model.JerseyJaxRsSupportedAnnotation;
 
 import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
-import java.util.List;
 import java.util.Set;
 
 /**

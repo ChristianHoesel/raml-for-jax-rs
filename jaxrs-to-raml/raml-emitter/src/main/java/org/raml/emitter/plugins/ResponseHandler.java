@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,12 @@
 package org.raml.emitter.plugins;
 
 import org.raml.api.RamlResourceMethod;
-import org.raml.jaxrs.types.TypeRegistry;
+import org.raml.builder.MethodBuilder;
 import org.raml.jaxrs.plugins.TypeSelector;
-import org.raml.utilities.IndentedAppendable;
+import org.raml.jaxrs.types.TypeRegistry;
 
 import java.io.IOException;
+import java.util.Collection;
 
 /**
  * Created by Jean-Philippe Belanger on 3/25/17. Just potential zeroes and ones
@@ -29,6 +30,7 @@ public interface ResponseHandler {
 
   int handlesResponses(RamlResourceMethod method);
 
-  void writeResponses(TypeRegistry typeRegistry, IndentedAppendable writer, RamlResourceMethod method,
-                      TypeSelector selector) throws IOException;
+  void writeResponses(TypeRegistry typeRegistry, Collection<RamlResourceMethod> method, TypeSelector selector,
+                      MethodBuilder methodBuilder)
+      throws IOException;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
  */
 package org.raml.jaxrs.converter.model;
 
+import org.raml.api.RamlApi;
+import org.raml.api.RamlMediaType;
+import org.raml.api.RamlResource;
 import org.raml.api.RamlSupportedAnnotation;
 import org.raml.jaxrs.converter.RamlConfiguration;
 import org.raml.jaxrs.model.JaxRsApplication;
-import org.raml.api.RamlMediaType;
-import org.raml.api.RamlApi;
-import org.raml.api.RamlResource;
 
 import java.util.List;
 
@@ -72,5 +72,10 @@ public class JaxRsRamlApi implements RamlApi {
   public List<RamlSupportedAnnotation> getSupportedAnnotation() {
 
     return Utilities.toRamlSupportedAnnotation(application.getSupportedAnnotations()).toList();
+  }
+
+  @Override
+  public String getTopPackage() {
+    return application.getTopPackage();
   }
 }

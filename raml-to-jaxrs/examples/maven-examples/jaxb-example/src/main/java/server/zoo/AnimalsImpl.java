@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,9 @@
  */
 package server.zoo;
 
-import example.model.Ancestor;
-import example.model.Animal;
-import example.model.AnimalImpl;
-import example.model.Gender;
-import example.model.InsectImpl;
+import example.model.*;
 import example.resources.Animals;
 
-import javax.ws.rs.core.GenericEntity;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,7 +60,7 @@ public class AnimalsImpl implements Animals {
     animal.setMother(insect);
     animal.setSiblings(animals);
 
-    animal.setAncestor(new Ancestor(insect));
+    animal.setAncestor(new AncestorImpl(insect));
 
     return GetAnimalsByIdResponse.respond200WithApplicationXml(animal);
   }

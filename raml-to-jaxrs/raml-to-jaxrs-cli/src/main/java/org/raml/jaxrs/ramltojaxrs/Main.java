@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,17 @@
  */
 package org.raml.jaxrs.ramltojaxrs;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.MissingOptionException;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.google.common.base.Optional;
+import org.apache.commons.cli.*;
+import org.jsonschema2pojo.AnnotationStyle;
 import org.raml.jaxrs.generator.Configuration;
 import org.raml.jaxrs.generator.GenerationException;
 import org.raml.jaxrs.generator.RamlScanner;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.List;
 
 /**
@@ -40,11 +36,13 @@ public class Main {
   public static void main(String[] args) throws IOException, GenerationException, ParseException {
 
     Options options = new Options();
+    options.addOption("j", "json-mapper", true, "jsonschema2pojo annotation types (jackson, jackson2 or gson)");
     options.addOption("m", "model-package", true, "model package");
     options.addOption("s", "support-package", true, "support package");
-    options.addOption(Option.builder("r").longOpt("resource-package").hasArg().desc("resource package").build());
     options.addOption("g", "generate-types-with", true, "generate types with plugins (jackson, gson, jaxb, javadoc, jsr303)");
+    options.addOption(Option.builder("r").required().longOpt("resource-package").hasArg().desc("resource package").build());
     options.addOption(Option.builder("d").required().longOpt("directory").hasArg().desc("generation directory").build());
+    options.addOption(Option.builder("c").longOpt("copy-schemas").build());
 
     try {
 
@@ -54,7 +52,9 @@ public class Main {
       String supportDir = command.getOptionValue("s");
       String resourceDir = command.getOptionValue("r");
       String directory = command.getOptionValue("d");
-      String extensions = command.getOptionValue("e");
+      String extensions = command.getOptionValue("g");
+      boolean shouldCopySchemas = command.hasOption("c");
+      Optional<String> jsonMapper = Optional.fromNullable(command.getOptionValue("j"));
 
       List<String> ramlFiles = command.getArgList();
 
@@ -62,7 +62,9 @@ public class Main {
       configuration.setModelPackage(modelDir);
       configuration.setResourcePackage(resourceDir);
       configuration.setSupportPackage(supportDir);
+      configuration.setCopySchemas(shouldCopySchemas);
       configuration.setOutputDirectory(new File(directory));
+      configuration.setJsonMapper(AnnotationStyle.valueOf(jsonMapper.or("jackson2").toUpperCase()));
 
       if (extensions != null) {
         configuration.setTypeConfiguration(extensions.split(("\\s*,\\s*")));
@@ -72,7 +74,16 @@ public class Main {
 
       for (String ramlFile : ramlFiles) {
 
-        scanner.handle(new File(ramlFile));
+        URLClassLoader ucl =
+            new URLClassLoader(new URL[] {new File(ramlFile).getParentFile().toURL()}, Main.class.getClassLoader());
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        try {
+          Thread.currentThread().setContextClassLoader(ucl);
+          scanner.handle(new File(ramlFile));
+        } finally {
+
+          Thread.currentThread().setContextClassLoader(loader);
+        }
       }
 
     } catch (ParseException e) {

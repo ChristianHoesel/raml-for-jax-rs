@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,7 @@ package org.raml.jaxrs.generator.v08;
 import com.google.common.collect.ImmutableMap;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import org.raml.jaxrs.generator.CurrentBuild;
-import org.raml.jaxrs.generator.GObjectType;
-import org.raml.jaxrs.generator.GenerationException;
-import org.raml.jaxrs.generator.Names;
-import org.raml.jaxrs.generator.ScalarTypes;
-import org.raml.jaxrs.generator.SchemaTypeFactory;
+import org.raml.jaxrs.generator.*;
 import org.raml.jaxrs.generator.ramltypes.GType;
 import org.raml.v2.api.model.v08.bodies.BodyLike;
 import org.raml.v2.api.model.v08.bodies.Response;
@@ -32,9 +27,7 @@ import org.raml.v2.api.model.v08.resources.Resource;
 
 import java.io.File;
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -84,6 +77,12 @@ public class V08GType implements GType {
     return typeDeclaration;
   }
 
+
+  @Override
+  public boolean isScalar() {
+    return !isJson() && !isXml();
+  }
+
   @Override
   public String type() {
     return ramlName;
@@ -114,11 +113,6 @@ public class V08GType implements GType {
     return false;
   }
 
-
-  @Override
-  public boolean isObject() {
-    return false;
-  }
 
   @Override
   public GType arrayContents() {
@@ -160,16 +154,6 @@ public class V08GType implements GType {
   }
 
   @Override
-  public List<String> enumValues() {
-    return Collections.emptyList();
-  }
-
-  @Override
-  public boolean isUnion() {
-    return false;
-  }
-
-  @Override
   public void construct(final CurrentBuild currentBuild, GObjectType objectType) {
     objectType.dispatch(new GObjectType.GObjectTypeDispatcher() {
 
@@ -199,7 +183,7 @@ public class V08GType implements GType {
       @Override
       public void onUnion() {
 
-        throw new GenerationException("no enums objects in v08");
+        throw new GenerationException("no union objects in v08");
       }
 
     });

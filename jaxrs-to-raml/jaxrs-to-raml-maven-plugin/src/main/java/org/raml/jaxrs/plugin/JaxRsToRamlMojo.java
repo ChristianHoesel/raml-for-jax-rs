@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,6 +70,9 @@ public class JaxRsToRamlMojo extends AbstractMojo {
   @Parameter(property = "jaxrs.to.raml.translatedAnnotations")
   private List<String> translatedAnnotations = new ArrayList<>();
 
+  @Parameter(property = "jaxrs.to.raml.topPackage")
+  private String topPackage;
+
 
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
@@ -107,7 +110,7 @@ public class JaxRsToRamlMojo extends AbstractMojo {
                   throw new IllegalArgumentException("invalid class " + input, e);
                 }
               }
-            }).toSet());
+            }).toSet(), configuration.getTopPackage());
 
     OneStopShop oneStopShop =
         OneStopShop.builder()
@@ -126,7 +129,7 @@ public class JaxRsToRamlMojo extends AbstractMojo {
 
   private PluginConfiguration createConfiguration() {
     return PluginConfiguration.create(getInputPath(), getSourceDirectoryPath(),
-                                      getOutputDirectoryPath(), getRamlFileName(), this.translatedAnnotations);
+                                      getOutputDirectoryPath(), getRamlFileName(), this.translatedAnnotations, this.topPackage);
   }
 
   private static void printConfiguration(PluginConfiguration configuration, Log logger) {

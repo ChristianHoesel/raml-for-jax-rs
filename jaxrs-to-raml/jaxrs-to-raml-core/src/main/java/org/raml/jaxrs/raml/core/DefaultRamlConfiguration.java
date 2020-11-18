@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 (c) MuleSoft, Inc.
+ * Copyright 2013-2018 (c) MuleSoft, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,11 @@
  */
 package org.raml.jaxrs.raml.core;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import org.raml.api.Annotable;
+import org.raml.api.RamlMediaType;
 import org.raml.jaxrs.converter.RamlConfiguration;
 import org.raml.jaxrs.converter.model.JaxRsRamlMediaType;
-import org.raml.api.RamlMediaType;
 
-import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
-import java.util.List;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -35,18 +30,21 @@ public class DefaultRamlConfiguration implements RamlConfiguration {
 
   private final String application;
   private final Set<Class<? extends Annotation>> translatedClasses;
+  private final String topPackage;
 
-  private DefaultRamlConfiguration(String application, Set<Class<? extends Annotation>> translatedClasses) {
+  private DefaultRamlConfiguration(String application, Set<Class<? extends Annotation>> translatedClasses, String topPackage) {
     this.application = application;
     this.translatedClasses = translatedClasses;
+    this.topPackage = topPackage;
   }
 
-  public static DefaultRamlConfiguration forApplication(String application, Set<Class<? extends Annotation>> translatedClasses) {
+  public static DefaultRamlConfiguration forApplication(String application, Set<Class<? extends Annotation>> translatedClasses,
+                                                        String topPackage) {
     checkNotNull(application);
     checkArgument(!application.trim().isEmpty(),
                   "application path should contain at least one meaningful character");
 
-    return new DefaultRamlConfiguration(application.trim(), translatedClasses);
+    return new DefaultRamlConfiguration(application.trim(), translatedClasses, topPackage);
   }
 
   @Override
@@ -72,5 +70,10 @@ public class DefaultRamlConfiguration implements RamlConfiguration {
   @Override
   public RamlMediaType getDefaultMediaType() {
     return JaxRsRamlMediaType.create(javax.ws.rs.core.MediaType.WILDCARD_TYPE);
+  }
+
+  @Override
+  public String getTopPackage() {
+    return topPackage;
   }
 }
